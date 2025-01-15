@@ -29,22 +29,38 @@
 
 
 ## 🌟 **Features**
-- 🚀 **Latest Technology**: Built with WebView2 to provide the newest features and best performance
-- 🌐 **Latest Web Ui**: Always up-to-date with Stremio Web v5
-- 🎞️ **Native Playback**: Integrated Player for native 4K playback, hardware decoding, and fastest video performance
-- 🔍 **Video Upscaling**:  Upscaling support for anything mpv supports
-- 🎥 **Full MPV Support**: Full MPV support use any hwdec, gpu-api or gpu-context like d3d, opengl and vulkan
-- 🌈 **HDR Support**: Full HDR Support thanks to fully supported mpv and any other mpv feature
-- 🔊 **Dolby Atmos Support**: Support for all mpv advanced audio features.
-- 🖼️ **Picture in Picture**: Picture in Picture Mode Support
-- 🌑 **Dark Mode**: Windows Dark mode support
-- 🖼️ **Thumbnail Preview**: ThumbFast support to allow for preview thumbnails when seeking
-- 📁 **Local File Playback**: Play any file MPV and ffmpeg supports, just use **open with** 'stremio' or **drag and drop**
-- 🌀 **Torrent Support**: Play any local .torrent file or any magnet: link
-- 📺 **Chromecast Support**: Cast Videos to your Chromecast
-- ➕ **Easy Addon Install**: Just use the install Button like stremio v4, no need to copy paste urls
-- 💼 **Portable Version**: Fully portable version including WebView2.
-- ⚙️ **App Settings**: Customize options like CloseOnExit, PauseOnMinimize, and PauseOnLostFocus via stremio-settings.ini.
+- 🚀 **Latest Technology**: 
+  - Built with WebView2 to provide the newest features and best performance
+- 🌐 **Latest Web Ui**: 
+  - Always up-to-date with Stremio Web v5
+- 🎞️ **Native Playback**: 
+  - Integrated Player for native 4K playback, hardware decoding, and fastest video performance
+- 🔍 **Video Upscaling**:  
+  - Upscaling support for anything mpv supports
+- 🎥 **Full MPV Support**: 
+  - Full MPV support use any hwdec, gpu-api or gpu-context like d3d, opengl and vulkan
+- 🌈 **HDR Support**: 
+  - Full HDR Support thanks to fully supported mpv and any other mpv feature
+- 🔊 **Dolby Atmos Support**: 
+  - Support for all mpv advanced audio features.
+- 🖼️ **Picture in Picture**: 
+  - Picture in Picture Mode Support
+- 🌑 **Dark Mode**: 
+  - Windows Dark mode support
+- 🖼️ **Thumbnail Preview**: 
+  - ThumbFast support to allow for preview thumbnails when seeking
+- 📁 **Local File Playback**: 
+  - Play any file MPV and ffmpeg supports, just use **open with** 'stremio' or **drag and drop**
+- 🌀 **Torrent Support**: 
+  - Play any local .torrent file or any magnet: link
+- 📺 **Chromecast Support**: 
+  - Cast Videos to your Chromecast
+- ➕ **Easy Addon Install**: 
+  - Just use the install Button like stremio v4, no need to copy paste urls
+- 💼 **Portable Version**: 
+  - Fully portable version including WebView2.
+- ⚙️ **App Settings**: 
+  - Customize options like CloseOnExit, PauseOnMinimize, and PauseOnLostFocus via stremio-settings.ini.
 
 
 
@@ -103,9 +119,10 @@
 ## 🔍 **Mpv Addons**
 
 - 🎥 **[ThumbFast](https://github.com/po5/thumbfast)**
-    - 🔧 Go in the `Stremio-Dekstop-v5` Repo to ``utils/mpv/thumbfast`` or ``direct-link`` and download ``thumbfast.7z``. Drag and Drop the archive contents into ``%localAppData%\Programs\LNV\Stremio-5\``
+    - 🔧 Go in the `Stremio-Dekstop-v5` Repo to ``utils/mpv/thumbfast`` or [direct-link](https://github.com/Zaarrg/stremio-desktop-v5/tree/webview-windows/utils/mpv/thumbfast) and download ``thumbfast.7z``. Drag and Drop the archive contents into ``%localAppData%\Programs\LNV\Stremio-5\``
     - 📁 Works best with local files as there is no **network bottleneck**. U can `Drag and Drop` any local file into **Stremio** or right click ``Open With > Stremio``
 
+> **⏳ Note:** For more details visit [mpv-portable-configs](https://github.com/Zaarrg/stremio-desktop-v5/blob/webview-windows/utils/mpv/README.md)
 
 ## ✨ **Stremio App**
 
@@ -121,10 +138,10 @@
         2. Here look for the `mainfest.json` for example ublock `{string-id}/1.62.0_0/manifest.json` as all the content beside is the extension
         3. Now we can copy the contents of ``{string-id}/1.62.0_0`` to ``%localAppData%\Programs\LNV\Stremio-5\portable_config\extensions\ublock``
         4. Important is that the ``mainfest.json`` is located directly in ``portable_config\extensions\ublock``
-        5. Done. Restart app and addon will be loaded. If loading fails check ``portable_config\errors-{date}.txt``
+        5. **Done**. Restart app and addons will be loaded. If loading fails check ``portable_config\errors-{date}.txt``
 
 - ⚙️ **App Settings**
-    - All App Settings can be adjusted with ``portable_config\stremio-settings.ini``
+    - **All App Settings** can be adjusted with ``portable_config\stremio-settings.ini``
     - Some options can be set by `right-clicking` on the **tray icon** as well.
     - ⌨️ **Possible Settings**
         - ❌ ``CloseOnExit`` Close app on exit instead of minimized to tray
@@ -133,6 +150,17 @@
         - 😴 ``PauseOnMinimize`` Pause playback on window minimize
         - 👀 ``PauseOnLostFocus`` Pause playback on window loses focus
         - 🔍 ``AllowZoom`` Allow zoom via `pinch action` or ``CTRL+Scroll``
+
+- ❌ **App Errors**
+    - If the app does not start and instantly closes, check the error log in ``portable_config\errors-{date}.txt``
+
+- ⚠️ **Common Issues**
+    - ❗ [WebView2](https://developer.microsoft.com/de-de/microsoft-edge/webview2/#download) not installed – Installed by default using the installer but may have failed
+    - ⚙️ Invalid MPV configuration like ``mpv.conf``, ``input.conf`` or ``scripts``
+    - 📄 Invalid ``stremio-settings.ini``
+    - 🧩 Invalid ``extensions``
+
+> **⏳ Note:** A default stremio-settings.ini can be found [here](https://github.com/Zaarrg/stremio-desktop-v5/blob/webview-windows/utils/stremio/stremio-settings.ini)
 
 ## 🎛️ **Mpv Configuration**
 
@@ -150,7 +178,6 @@ Enhance your Stremio experience by customizing the MPV player settings. Below ar
   gpu-api=vulkan
   target-colorspace-hint=yes
   ```
-or `target-colorspace-hint=yes` for DV content
 
 > **⏳ Note:** Any other configuration files can be just dropped into ``%localAppData%\Programs\LNV\Stremio-5\portable_config`` as this is the mpv ``config-dir`` like ``input.conf``. ``scripts`` or ``scripts-conf``
 
