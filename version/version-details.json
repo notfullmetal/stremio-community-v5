@@ -10,8 +10,8 @@
       "checksum": "3d68ff9e3e34c16dc5a97c950295237cfae8bd241ec40a42fffe260d558b49e3"
     },
     "server.js": {
-      "url": "https://dl.strem.io/server/v4.20.8/desktop/server.js",
-      "checksum": "7113200f5775c958fd141bc502a808ab00ebfbb53799a13c3ab0aca84c5fb476"
+      "url": "https://dl.strem.io/server/v4.20.11/desktop/server.js",
+      "checksum": "d900b0525bac3531aa6ce98e1a3c8a3b1d1b1daa069a7f6fcbddea5625f1f791"
     }
   }
 }
