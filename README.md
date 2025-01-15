@@ -45,7 +45,7 @@
   <li>📺 <strong>Chromecast Support</strong>: Cast Videos to your Chromecast</li>
   <li>➕ <strong>Easy Addon Install</strong>: Just use the install Button like stremio v4, no need to copy paste urls</li>
   <li>💼 <strong>Portable Version</strong>: Fully portable version including WebView2.</li>
-  <li>⚙️ <strong>App Settings</strong>: Customize options like CloseOnExit, PauseOnMinimize, and PauseOnLostFocus via stremio-settings.ini.</li>
+  <li>⚙️ <strong>App Settings</strong>: Customize options like CloseOnExit, PauseOnMinimize, and PauseOnLostFocus and more.</li>
 </ul>
 
 
