@@ -286,24 +286,16 @@ function updateChocolateyInstall(ps1Path, gitTag, newVersion) {
     checkFileExists(ps1Path, "chocolateyinstall.ps1");
     let content = fs.readFileSync(ps1Path, "utf8");
 
-    // For 64-bit:
-    // if ([Environment]::Is64BitOperatingSystem) {
-    //   $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/<GIT_TAG>/Stremio.<SHELL_VERSION>-x64.exe'
-    // }
-    const new64Url = `if ([Environment]::Is64BitOperatingSystem) {\n    $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x64.exe'`;
-    content = content.replace(
-        /if\s*\(\[Environment\]::Is64BitOperatingSystem\)\s*\{\s*\$packageArgs\['url'\]\s*=\s*'[^']+/m,
-        new64Url
+    // Regex for the 64-bit block:
+    const pattern64 = /(\[Environment\]::Is64BitOperatingSystem\)\s*\{\s*\$packageArgs\['url'\]\s*=\s*')([^']+)(')/m;
+    content = content.replace(pattern64,
+        `$1https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x64.exe$3`
     );
 
-    // For 32-bit:
-    // } else {
-    //   $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/<GIT_TAG>/Stremio.<SHELL_VERSION>-x86.exe'
-    // }
-    const new86Url = `} else {\n    $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x86.exe'`;
-    content = content.replace(
-        /}\s*else\s*\{\s*\$packageArgs\['url'\]\s*=\s*'[^']+/m,
-        new86Url
+    // Regex for the 32-bit block:
+    const pattern86 = /(\}\s*else\s*\{\s*\$packageArgs\['url'\]\s*=\s*')([^']+)(')/m;
+    content = content.replace(pattern86,
+        `$1https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x86.exe$3`
     );
 
     fs.writeFileSync(ps1Path, content, "utf8");

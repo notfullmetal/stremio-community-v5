@@ -8,9 +8,9 @@ $packageArgs = @{
 }
 
 if ([Environment]::Is64BitOperatingSystem) {
-    $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.7/Stremio.5.0.7-x64.exe'''
+    $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.8/Stremio.5.0.8-x64.exe'
 } else {
-    $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.7/Stremio.5.0.7-x86.exe'''
+    $packageArgs['url'] = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.8/Stremio.5.0.8-x86.exe'
 }
 
 Install-ChocolateyPackage @packageArgs
