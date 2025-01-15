@@ -1,1 +1,182 @@
-"# New Branch" 
+<p align="center">
+  <img src="https://www.stremio.com/website/stremio-logo-small.png" alt="Stremio Web Desktop Logo" width="200" />
+</p>
+<div align="center">
+  <h1>🌌 Stremio Desktop<br/><span style="font-size: 0.6em; font-weight: normal;">Community</span></h1>
+</div>
+
+<p align="center">Stremio Desktop app with the latest Stremio web UI v5, built with Qt6</p>
+<p align="center">
+  <!-- C++ badge -->
+  <img src="https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white" alt="C++" />
+  <!-- WebView2 badge -->
+  <img src="https://img.shields.io/badge/WebView2-0078D6?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="WebView2" />
+  <!-- MPV badge -->
+  <img src="https://img.shields.io/badge/MPV-663399?style=for-the-badge&logo=mpv&logoColor=white" alt="MPV" />
+  <!-- Win32 badge -->
+  <img src="https://img.shields.io/badge/Win32-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Win32" />
+  <!-- Scoop badge -->
+  <img src="https://img.shields.io/badge/Scoop-80C342?style=for-the-badge&logo=scoop&logoColor=white" alt="Scoop" />
+  <!-- Chocolatey badge -->
+  <img src="https://img.shields.io/badge/Chocolatey-3C69E7?style=for-the-badge&logo=chocolatey&logoColor=white" alt="Chocolatey" />
+  <!-- Streaming badge -->
+  <img src="https://img.shields.io/badge/Streaming-E34F26?style=for-the-badge&logo=netflix&logoColor=white" alt="Streaming" />
+  <!-- Torrents badge -->
+  <img src="https://img.shields.io/badge/Torrents-000000?style=for-the-badge&logo=thepiratebay&logoColor=white" alt="Torrents" />
+</p>
+
+## 🌟 **Features**
+- 🚀 **Latest Technology**: Built with WebView2 to provide the newest features and best performance
+- 🌐 **Latest Web Ui**: Always up-to-date with Stremio Web v5
+- 🎞️ **Native Playback**: Integrated Player for native 4K playback, hardware decoding, and fastest video performance
+- 🔍 **Video Upscaling**:  Upscaling support for anything mpv supports
+- 🎥 **Full MPV Support**: Full MPV support use any hwdec, gpu-api or gpu-context like d3d, opengl and vulkan or `target-colorspace-hint=yes` for DV content
+- 🌈 **HDR Support**: Full HDR Support thanks to fully supported mpv and any other mpv feature
+- 🔊 **Dolby Atmos Support**: Support for all mpv advanced audio features.
+- 🖼️ **Picture in Picture**: Picture in Picture Mode Support
+- 🌑 **Dark Mode**: Windows Dark mode support
+- 🖼️ **Thumbnail Preview**: ThumbFast support to allow for preview thumbnails when seeking
+- 📁 **Local File Playback**: Play any local file that MPV and ffmpeg supports, just use open with 'stremio' or drag and drop
+- 🌀 **Torrent Support**: Play any local .torrent file or any magnet: link
+- 📺 **Chromecast Support**: Cast Videos to your Chromecast
+- ➕ **Easy Addon Install**: Just use the install Button like stremio v4, no need to copy paste urls
+- 💼 **Portable Version**: Fully portable version including WebView2.
+- ⚙️ **App Settings**: Customize App behavior like CloseOnExit, PauseOnMinimize or PauseOnLostFocus and more via stremio-settings.ini.
+
+
+
+<p align="center">
+  <img src="https://i.imgur.com/xvM5lp8.png" alt="Stremio Web Desktop Screenshot" width="600" />
+</p>
+
+## 🔧 Installation
+
+1. 🪟 **Windows x64 and x86**
+    1. 📥 **Installer**
+        - **Install using the** `Installer`. Download `stremio-5.0.0-x64.exe` or `stremio-5.0.0-x86.exe` and run it.
+    2. 💼 **Portable Version**
+        - **Install using the** `Archive`. Download `stremio-5.0.0-x64.7z` or `stremio-5.0.0-x86.7z` extract it and run `stremio.exe`
+    3. 🥄 **Scoop.sh**
+        - Coming Soon!
+    4. 🍫 **Chocolatey**
+        - Coming Soon!
+
+> **⏳ Note:** If you have stremio-desktop v4.x.x installed make sure to uninstall it first. Otherwise there might be issues.
+
+2. 🚀 **Linux, macOS**
+- Coming soon!
+
+> **⏳ Note:** Linux and Mac release will take considerable time as they need their own build with os specific technology's
+
+## 🔍 **Mpv Upscalers**
+
+- 🎥 **[Anime4k](https://github.com/bloc97/Anime4K)**
+    - ✅ Included by default.
+    - 🔢 Use `CTRL+1` - `CTRL+6` to enable shaders.
+    - ❌ Use `CTRL+0` to disable.
+
+- 🎨 **[AnimeJaNai](https://github.com/the-database/mpv-upscale-2x_animejanai)**
+    - ❌ Not included by default.
+    - 📥 Download from the **Stremio-Desktop-v5** [release tab](https://github.com/Zaarrg/stremio-desktop-v5) the `stremio-animejanai-3.x.x.7z` for Stremio and drop the content of the 7z into `%localAppData%\Programs\LNV\Stremio-5\` and `replace all`
+        - 🛠️ **Changes made:**
+            - Removed `mpvnet.exe` as Stremio is used as the player.
+            - Adjusted `mpv.conf` to work with Stremio.
+            - Adjusted `input.conf` to work with Stremio.
+    - ⌨️ **Possible Keybindings**
+        - 🎬 `CTRL+J` Show Upscaler Status
+        - 🛠️ `CTRL+E` Open AnimeJaNai ConfEditor
+        - ❌ `CTRL+0` Disable Upscaling
+        - 🔢 `SHIFT+1` - `SHIFT+3` Select Quality, Balanced or Performance Profiles
+        - ⚙️ `CTRL+1` - `CTRL+9` Switch between Custom Profiles
+        - 🔗 For more, check [AnimeJaNai](https://github.com/the-database/mpv-upscale-2x_animejanai)
+
+> **⏳ Note:** When using AnimeJaNai on first playback Stremio will be unresponsive and a console will open to build the model via e.g. TensorRT. You will need to wait until the console closes for playback to start. This happens only once per model.
+
+
+- 🚀 **Nvidia RTX and Intel VSR Scaling**
+    - ✅ Supported by using `mpv.conf`.
+    - ✍️ Modify in `%localAppData%\Programs\LNV\Stremio-5\` the ``portable_config/mpv.conf`` and add the line ``vf=d3d11vpp=scale=2:scaling-mode=nvidia`` more details [here](https://www.reddit.com/r/nvidia/comments/1foyl4n/mpv_player_v0390_adds_rtx_video_super_resolution/)
+
+## 🔍 **Mpv Addons**
+
+- 🎥 **[ThumbFast](https://github.com/po5/thumbfast)**
+    - 🔧 Go in the `Stremio-Dekstop-v5` Repo to ``utils/mpv/thumbfast`` or ``direct-link`` and download ``thumbfast.7z``. Drag and Drop the archive contents into ``%localAppData%\Programs\LNV\Stremio-5\``
+    - 📁 Works best with local files as there is no **network bottleneck**. U can `Drag and Drop` any local file into **Stremio** or right click ``Open With > Stremio``
+
+
+## ✨ **Stremio App**
+
+- 📁 **Local Files**
+    - Play any **local file** or **torrent** by `drag and dropping` or ``Open With > Stremio`` that mpv and ffmpeg support
+    - Play any **magnet** by `opening it via the browser` in Stremio or `copy pasting` it into the **Search Bar**
+
+- 🧩 **Browser Extensions**
+    - Add any Browser Extension to Stremio by dropping the ``unpacked`` Extension into ``portable_config/extensions``
+    - On Start Extensions from ``portable_config/extensions`` are loaded.
+    - 👉 **To install extension:**
+        1. Get the ``unpacked`` Extensions from``%localAppData%\Microsoft\Edge SxS\User Data\Default\Extensions``.
+        2. Here look for the `mainfest.json` for example ublock `{string-id}/1.62.0_0/manifest.json` as all the content beside is the extension
+        3. Now we can copy the contents of ``{string-id}/1.62.0_0`` to ``%localAppData%\Programs\LNV\Stremio-5\portable_config\extensions\ublock``
+        4. Important is that the ``mainfest.json`` is located directly in ``portable_config\extensions\ublock``
+        5. Done. Restart app and addon will be loaded. If loading fails check ``portable_config\errors-{date}.txt``
+
+- ⚙️ **App Settings**
+    - All App Settings can be adjusted with ``portable_config\stremio-settings.ini``
+    - Some options can be set by `right-clicking` on the **tray icon** as well.
+    - ⌨️ **Possible Settings**
+        - ❌ ``CloseOnExit`` Close app on exit instead of minimized to tray
+        - 🌓 ``UseDarkTheme`` Toggle dark theme
+        - 📏 ``ThumbFastHeight`` Enable thumbfast and set the thumbfast image height. This adjust the offset of the top left corner of the thumb. Meaning `100` will move the top left corner 100px up. `0` disables thumbfast
+        - 😴 ``PauseOnMinimize`` Pause playback on window minimize
+        - 👀 ``PauseOnLostFocus`` Pause playback on window loses focus
+        - 🔍 ``AllowZoom`` Allow zoom via `pinch action` or ``CTRL+Scroll``
+
+## 🎛️ **Mpv Configuration**
+
+Enhance your Stremio experience by customizing the MPV player settings. Below are the key configuration files and guidelines to help you get started:
+
+- 📁 **`mpv.conf` Location**
+    - The ``mpv.conf`` file can be found in the following location:
+        - **Installation Path:** ``%localAppData%\Programs\LNV\Stremio-5\portable_config\mpv.conf``
+        - **Shaders Folder:** Located within the installation directory ``..\Stremio-5\portable_config\shaders``.
+
+> **⏳ Note:** Any other configuration files can be just dropped into ``%localAppData%\Programs\LNV\Stremio-5\portable_config`` as this is the mpv ``config-dir`` like ``input.conf``. ``scripts`` or ``scripts-conf``
+
+- **🎹 Usage example in `input.conf` using [Anime4k](https://github.com/bloc97/Anime4K):**
+  ```shell
+  # Optimized shaders for higher-end GPU
+  CTRL+1 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl;~~/shaders/Anime4K_Restore_CNN_VL.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_VL.glsl;~~/shaders/Anime4K_AutoDownscalePre_x2.glsl;~~/shaders/Anime4K_AutoDownscalePre_x4.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl"; show-text "Anime4K: Mode A (HQ)"
+  CTRL+2 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl;~~/shaders/Anime4K_Restore_CNN_Soft_VL.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_VL.glsl;~~/shaders/Anime4K_AutoDownscalePre_x2.glsl;~~/shaders/Anime4K_AutoDownscalePre_x4.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl"; show-text "Anime4K: Mode B (HQ)"
+  CTRL+3 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl;~~/shaders/Anime4K_Upscale_Denoise_CNN_x2_VL.glsl;~~/shaders/Anime4K_AutoDownscalePre_x2.glsl;~~/shaders/Anime4K_AutoDownscalePre_x4.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl"; show-text "Anime4K: Mode C (HQ)"
+  CTRL+4 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl;~~/shaders/Anime4K_Restore_CNN_VL.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_VL.glsl;~~/shaders/Anime4K_Restore_CNN_M.glsl;~~/shaders/Anime4K_AutoDownscalePre_x2.glsl;~~/shaders/Anime4K_AutoDownscalePre_x4.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl"; show-text "Anime4K: Mode A+A (HQ)"
+  CTRL+5 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl;~~/shaders/Anime4K_Restore_CNN_Soft_VL.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_VL.glsl;~~/shaders/Anime4K_AutoDownscalePre_x2.glsl;~~/shaders/Anime4K_AutoDownscalePre_x4.glsl;~~/shaders/Anime4K_Restore_CNN_Soft_M.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl"; show-text "Anime4K: Mode B+B (HQ)"
+  CTRL+6 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl;~~/shaders/Anime4K_Upscale_Denoise_CNN_x2_VL.glsl;~~/shaders/Anime4K_AutoDownscalePre_x2.glsl;~~/shaders/Anime4K_AutoDownscalePre_x4.glsl;~~/shaders/Anime4K_Restore_CNN_M.glsl;~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl"; show-text "Anime4K: Mode C+A (HQ)"
+  
+  CTRL+0 no-osd change-list glsl-shaders clr ""; show-text "GLSL shaders cleared"
+  ```
+> **⏳ Note:** Some keys might not work as key presses are converted from js event.codes to literal values for mpv
+
+## ⚙️ **Start Arguments**
+Use these extra arguments when launching the application:
+
+| Argument                    | Example                                               | Description                                                                                               |
+|-----------------------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| --webui-url=                | --webui-url=https://web.stremio.com/                  | Loads web ui from `https://web.stremio.com/`                                                              |
+| --streaming-server-disabled |                                                       | Disable auto start of  `streamio-server`, Default behaviour in prod
+| --autoupdater-force-full    |                                                       | Forces Autoupdate to always do a `full-update` rather than `partial`                                      |
+| --autoupdater-endpoint=     | --autoupdater-endpoint==https://verison.mydomain.com/ | Overrides default checking endpoint for the autoupdater                                                   |
+
+> **⏳ Note:** By default will use as ``webui-url`` the [stremio-web-shell](https://github.com/Zaarrg/stremio-web-shell-fixes) web-ui hosted [here](https://zaarrg.github.io/stremio-web-shell-fixes/#/) which includes fixes to run smoothly with qt6
+
+## 📚 **Guide / Docs**
+If you want to build this app yourself, check the “[docs](https://github.com/Zaarrg/stremio-desktop-v5/tree/master/docs)” folder in this repository for setup instructions and additional information.
+
+## ⚠️ **Disclaimer**
+This project is not affiliated with **Stremio** in any way.
+
+## 🤝 **Support Development**
+If you enjoy this project and want to support further development, consider [buying me a coffee](https://ko-fi.com/zaarrg). Your support means a lot! ☕
+
+<p align="center">
+  <strong>⭐ Made with ❤️ by <a href="https://github.com/Zaarrg">Zaarrg</a> ⭐</strong>
+</p>

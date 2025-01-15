@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>stremio-desktop-v5</id>
+    <version>5.0.7</version>
+    <title>Stremio Desktop v5</title>
+    <authors>Zaarrg</authors>
+    <owners>Zaarrg</owners>
+    <projectUrl>https://github.com/Zaarrg/stremio-desktop-v5</projectUrl>
+    <description>Stremio Desktop v5 Community</description>
+    <tags>stremio video streaming media</tags>
+    <licenseUrl>https://github.com/Zaarrg/stremio-desktop-v5/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <dependencies>
+    </dependencies>
+  </metadata>
+</package>

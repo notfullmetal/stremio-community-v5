@@ -1,0 +1,59 @@
+{
+  "version": "5.0.7",
+  "description": "Stremio Desktop v5 Community",
+  "homepage": "https://github.com/Zaarrg/stremio-desktop-v5",
+  "license": "GPL-3.0",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.7/Stremio.5.0.7-x64.exe",
+      "hash": "a7b71844a12f23272f8a5658fefd0d94bdf9f7e3c9a820e7d1a07436b8927bdb",
+      "installer": {
+        "args": [
+          "/S"
+        ]
+      },
+      "uninstaller": {
+        "file": "%LOCALAPPDATA%\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
+        "args": [
+          "/S"
+        ]
+      }
+    },
+    "32bit": {
+      "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.7/Stremio.5.0.7-x86.exe",
+      "hash": "65bf17a67c22d67bf602a8023ac94ae63f8a685f32e63d1d28d3a6b0cb0932ef",
+      "installer": {
+        "args": [
+          "/S"
+        ]
+      },
+      "uninstaller": {
+        "file": "%LOCALAPPDATA%\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
+        "args": [
+          "/S"
+        ]
+      }
+    }
+  },
+  "checkver": {
+    "github": "Zaarrg/stremio-desktop-v5",
+    "regex": "Stremio\\.([\\d.]+)-x64\\.exe"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/$version/Stremio.$version-x64.exe",
+        "hash": {
+          "url": "$url.sha256"
+        }
+      },
+      "32bit": {
+        "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/$version/Stremio.$version-x86.exe",
+        "hash": {
+          "url": "$url.sha256"
+        }
+      }
+    }
+  },
+  "notes": "Stremio Desktop v5 using silent install via /S. Built-in auto-updater may override Scoop-managed updates."
+}
