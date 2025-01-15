@@ -28,39 +28,25 @@
 </p>
 
 
-## 🌟 **Features**
-- 🚀 **Latest Technology**: 
-  - Built with WebView2 to provide the newest features and best performance
-- 🌐 **Latest Web Ui**: 
-  - Always up-to-date with Stremio Web v5
-- 🎞️ **Native Playback**: 
-  - Integrated Player for native 4K playback, hardware decoding, and fastest video performance
-- 🔍 **Video Upscaling**:  
-  - Upscaling support for anything mpv supports
-- 🎥 **Full MPV Support**: 
-  - Full MPV support use any hwdec, gpu-api or gpu-context like d3d, opengl and vulkan
-- 🌈 **HDR Support**: 
-  - Full HDR Support thanks to fully supported mpv and any other mpv feature
-- 🔊 **Dolby Atmos Support**: 
-  - Support for all mpv advanced audio features.
-- 🖼️ **Picture in Picture**: 
-  - Picture in Picture Mode Support
-- 🌑 **Dark Mode**: 
-  - Windows Dark mode support
-- 🖼️ **Thumbnail Preview**: 
-  - ThumbFast support to allow for preview thumbnails when seeking
-- 📁 **Local File Playback**: 
-  - Play any file MPV and ffmpeg supports, just use **open with** 'stremio' or **drag and drop**
-- 🌀 **Torrent Support**: 
-  - Play any local .torrent file or any magnet: link
-- 📺 **Chromecast Support**: 
-  - Cast Videos to your Chromecast
-- ➕ **Easy Addon Install**: 
-  - Just use the install Button like stremio v4, no need to copy paste urls
-- 💼 **Portable Version**: 
-  - Fully portable version including WebView2.
-- ⚙️ **App Settings**: 
-  - Customize options like CloseOnExit, PauseOnMinimize, and PauseOnLostFocus via stremio-settings.ini.
+<h2>🌟 <strong>Features</strong></h2>
+<ul style="line-height:1.9;">
+  <li>🚀 <strong>Latest Technology</strong>: Built with WebView2 to provide the newest features and best performance</li>
+  <li>🌐 <strong>Latest Web Ui</strong>: Always up-to-date with Stremio Web v5</li>
+  <li>🎞️ <strong>Native Playback</strong>: Integrated Player for native 4K playback, hardware decoding, and fastest video performance</li>
+  <li>🔍 <strong>Video Upscaling</strong>: Upscaling support for anything mpv supports</li>
+  <li>🎥 <strong>Full MPV Support</strong>: Full MPV support use any hwdec, gpu-api or gpu-context like d3d, opengl and vulkan</li>
+  <li>🌈 <strong>HDR Support</strong>: Full HDR Support thanks to fully supported mpv and any other mpv feature</li>
+  <li>🔊 <strong>Dolby Atmos Support</strong>: Support for all mpv advanced audio features.</li>
+  <li>🖼️ <strong>Picture in Picture</strong>: Picture in Picture Mode Support</li>
+  <li>🌑 <strong>Dark Mode</strong>: Windows Dark mode support</li>
+  <li>🖼️ <strong>Thumbnail Preview</strong>: ThumbFast support to allow for preview thumbnails when seeking</li>
+  <li>📁 <strong>Local File Playback</strong>: Play any file MPV and ffmpeg supports, just use <strong>open with</strong> 'stremio' or <strong>drag and drop</strong></li>
+  <li>🌀 <strong>Torrent Support</strong>: Play any local .torrent file or any magnet: link</li>
+  <li>📺 <strong>Chromecast Support</strong>: Cast Videos to your Chromecast</li>
+  <li>➕ <strong>Easy Addon Install</strong>: Just use the install Button like stremio v4, no need to copy paste urls</li>
+  <li>💼 <strong>Portable Version</strong>: Fully portable version including WebView2.</li>
+  <li>⚙️ <strong>App Settings</strong>: Customize options like CloseOnExit, PauseOnMinimize, and PauseOnLostFocus via stremio-settings.ini.</li>
+</ul>
 
 
 
