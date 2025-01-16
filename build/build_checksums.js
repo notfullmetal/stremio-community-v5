@@ -215,7 +215,7 @@ const [,, OPENSSL_BIN, GIT_TAG, SHELL_VERSION, SERVER_VERSION] = process.argv;
     updateStremioNuspec(CHOCO_NUSPEC_PATH, SHELL_VERSION);
 
     // 9) Update chocolateyinstall.ps1 URLs
-    updateChocolateyInstall(CHOCO_INSTALL_PS1_PATH, GIT_TAG, SHELL_VERSION);
+    updateChocolateyInstall(CHOCO_INSTALL_PS1_PATH, GIT_TAG, SHELL_VERSION, exeHash_x64, exeHash_x86);
 
     // 10) Update the Scoop manifest (stremio-desktop-v5.json)
     updateScoopManifest(SCOOP_MANIFEST_PATH, GIT_TAG, SHELL_VERSION, exeHash_x64, exeHash_x86);
@@ -282,24 +282,33 @@ function updateStremioNuspec(nuspecPath, newVersion) {
 }
 
 // 9) Update chocolateyinstall.ps1 with new GIT_TAG + SHELL_VERSION in the URLs
-function updateChocolateyInstall(ps1Path, gitTag, newVersion) {
+function updateChocolateyInstall(ps1Path, gitTag, newVersion, hash64, hash86) {
     checkFileExists(ps1Path, "chocolateyinstall.ps1");
     let content = fs.readFileSync(ps1Path, "utf8");
 
-    // Regex for the 64-bit block:
-    const pattern64 = /(\[Environment\]::Is64BitOperatingSystem\)\s*\{\s*\$packageArgs\['url'\]\s*=\s*')([^']+)(')/m;
-    content = content.replace(pattern64,
-        `$1https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x64.exe$3`
-    );
+    // We'll build a single block that covers both if/else in one go.
+    const newBlock = `
+if ([Environment]::Is64BitOperatingSystem) {
+    $packageArgs['url']          = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x64.exe'
+    $packageArgs['checksum']     = '${hash64}'
+    $packageArgs['checksumType'] = 'sha256'
+} else {
+    $packageArgs['url']          = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x86.exe'
+    $packageArgs['checksum']     = '${hash86}'
+    $packageArgs['checksumType'] = 'sha256'
+}
+`;
 
-    // Regex for the 32-bit block:
-    const pattern86 = /(\}\s*else\s*\{\s*\$packageArgs\['url'\]\s*=\s*')([^']+)(')/m;
-    content = content.replace(pattern86,
-        `$1https://github.com/Zaarrg/stremio-desktop-v5/releases/download/${gitTag}/Stremio.${newVersion}-x86.exe$3`
-    );
+    // Regex to capture the entire if...else block (non-greedy):
+    // This should match from "if ([Environment]::Is64BitOperatingSystem) {"
+    // until the closing "}" of the else block.
+    const pattern = /if\s*\(\[Environment\]::Is64BitOperatingSystem\)\s*\{[\s\S]+?\}\s*else\s*\{[\s\S]+?\}/m;
+
+    // Replace the entire old block with newBlock
+    content = content.replace(pattern, newBlock.trim());
 
     fs.writeFileSync(ps1Path, content, "utf8");
-    console.log(`Updated chocolateyinstall.ps1 URLs to version ${newVersion}`);
+    console.log(`Updated chocolateyinstall.ps1 with new version=${newVersion}, hash64=${hash64}, hash86=${hash86}`);
 }
 
 // 10) Update the Scoop manifest stremio-desktop-v5.json

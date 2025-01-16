@@ -46,6 +46,8 @@
   <li>➕ <strong>Easy Addon Install</strong>: Just use the install Button like stremio v4, no need to copy paste urls</li>
   <li>💼 <strong>Portable Version</strong>: Fully portable version including WebView2.</li>
   <li>⚙️ <strong>App Settings</strong>: Customize options like CloseOnExit, PauseOnMinimize, and PauseOnLostFocus and more.</li>
+  <li>🔄 <strong>Built-in Autoupdate</strong>: Built-in autoupdater. No need to always download from GitHub.</li>
+  <li>📦 <strong>Scoop and Chocolatey</strong>: Support for Scoop and Choco for ease of use.</li>
 </ul>
 
 
@@ -67,7 +69,10 @@
        scoop bucket add zarg https://github.com/zaarrg/scoop
        scoop install stremio-desktop-v5
        # Update
+       scoop update zarg
        scoop update stremio-desktop-v5
+       # Uninstall
+       scoop uninstall stremio-desktop-v5
        ```
     4. 🍫 **Chocolatey**
         ```shell
@@ -75,6 +80,8 @@
         choco install stremio-desktop-v5 -y
         # Update
         choco upgrade stremio-desktop-v5 -y
+        # Uninstall
+        choco uninstall stremio-desktop --yes
         ```
         
 
