@@ -60,7 +60,7 @@
 
 ## 🎭 Comparison
 
-- A side-by-side visual comparison of various features and enhancements in Stremio Desktop v5.
+- A side-by-side visual comparison of various features and enhancements in Stremio Desktop v5. Due to this being a screenshots, HDR appears over-exposed.
 
 <p align="center">
   <strong>HDR Comparison</strong>
