@@ -32,9 +32,7 @@ Ensure the following are installed on your system:
 ### 1️⃣ **Install Essential Tools**
 - **Git**: [Download](https://git-scm.com/download/win) and install.
 - **Visual Studio**: [Download Community 2022](https://visualstudio.microsoft.com/de/downloads/).
-- **Node.js**: Get version [v8.17.0](https://nodejs.org/dist/v8.17.0/win-x86/node.exe).
-- **FFmpeg**: [Download](https://ffmpeg.zeranoe.com/builds/win32/static/ffmpeg-3.3.4-win32-static.zip).  
-  *(Other versions may also work)*.
+- **Vcpkg**: [Download](https://github.com/microsoft/vcpkg)
 
 ---
 
@@ -43,14 +41,18 @@ Ensure the following are installed on your system:
 
 1. Download vcpkg [here](https://github.com/microsoft/vcpkg).
 
-2. Install using vcpkg ``openssl:x64-windows-static`` and ``nlohmann-json:x64-windows-static``
+2. Install using vcpkg ``openssl:x64-windows-static``, ``nlohmann-json:x64-windows-static`` and ``curl:x64-windows-static``
+
+> **⏳ Note:** To deploy x86 install the x86 versions of the dependencies above.
+
 
 ---
 
 ### 3️⃣ **Prepare the MPV Library**
 
-- Download the MPV library: [MPV libmpv](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/).
-- Use the `mpv-x86_64` version.
+- **Optional step as mpv is included as submodule:**
+  - Download the MPV library: [MPV libmpv](https://sourceforge.net/projects/mpv-player-windows/files/libmpv/).
+  - Use the `mpv-x86_64` version.
 > **⏳ Note:** The submodule https://github.com/Zaarrg/libmpv already includes .lib, just make sure to unzip the actual .dll for x64 systems.
 ---
 
@@ -66,9 +68,9 @@ Ensure the following are installed on your system:
     -DCMAKE_TOOLCHAIN_FILE=C:/bin/vcpkg/scripts/buildsystems/vcpkg.cmake 
     -DVCPKG_TARGET_TRIPLET=x64-windows-static
    ```
-   
+   As Oneliner:
     ```cmd
-   -DCMAKE_TOOLCHAIN_FILE=C:\bin\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows-static
+   -DCMAKE_TOOLCHAIN_FILE=C:\bin\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
    ```
 3. Download the `server.js` file:
    ```cmd
@@ -100,6 +102,22 @@ Ensure the following are installed on your system:
      ```cmd
       node deploy_windows.js --x86 --portable
       ```
+
+2. **Requirements**
+   - To run the deploy_window.js script successfully the following is always required:
+     1. ``libmpv-2.dll`` in ``deps/libmpv/i686`` for ``x86`` or ``deps/libmpv/x86_64`` for ``x64``
+     2. ``server.js`` and ``stremio-runtime.exe`` in ``utils/windows``
+     3. ``ffmpeg`` folder with ffmpeg and .dlls in ``utils/windows/ffmpeg``
+     4. ``anime4k``  in ``utils/mpv/anime4k/portable_config``
+     5. ``stremio-settings.ini`` as default settings in ``utils/stremio``
+     6. ```vcpkg toolchain``` in `C:/bin/vcpkg/scripts/buildsystems/vcpkg.cmake` or change the `VCPKG_CMAKE` path in the script.
+     7. ``cmake-build-release-x64`` or ``cmake-build-release-x86`` folders in project root. Run cmake once before deployment for this.
+   - For the installer
+     1. ``nsis`` in ``C:\Program Files (x86)\NSIS\makensis.exe`` or change path manually
+     2. ``nsprocess`` nsis plugin. Can be found in ``utils/window/NsProcess``. Drop the contents into your nsis install folder.
+   - For Portable
+     1. ``7zip`` in ``C:\Program Files\7-Zip\7z.exe`` or ``C:\Program Files (x86)\7-Zip\7z.exe``
+     2. ``WebView2 Runtime`` in ``utils/windows/WebviewRuntime/x64/EdgeWebView`` or ``../x86/EdgeWebView``. The Runtime can be found at ``C:\Program Files (x86)\Microsoft\EdgeWebView\Application\131.0.2903.146``. Copy the contents of this to our ``utils/windows/WebviewRuntime/x64/EdgeWebView``. For ``x86`` install ``WebView2 Runtime x86`` and do the same.
 
 
 > **⏳ Note:** This script uses common path for ``DCMAKE_TOOLCHAIN_FILE`` of vcpkg, make sure the script has the correct one. If running with ``--installer`` make sure u installed ``nsis`` with the needed ``nsprocess`` plugin at least once.

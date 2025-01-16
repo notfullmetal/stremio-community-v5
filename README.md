@@ -5,7 +5,7 @@
   <h1>🌌 Stremio Desktop<br/><span style="font-size: 0.6em; font-weight: normal;">Community</span></h1>
 </div>
 
-<p align="center">Stremio Desktop app with the latest Stremio web UI v5, built with Qt6</p>
+<p align="center">Stremio Desktop app with the latest Stremio web UI v5, built with WebView2</p>
 <p align="center">
   <!-- C++ badge -->
   <img src="https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white" alt="C++" />

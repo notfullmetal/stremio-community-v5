@@ -12,7 +12,7 @@
 node build_checksums.js <OpenSSL_Bin> <Git_Tag> <Shell_Version> <Server.js_Version>
 ```
 ```
-node build_checksums.js "C:\Program Files\OpenSSL-Win64\bin" "5.0.0-beta.1" "5.0.0" v4.20.8
+node build_checksums.js "C:\Program Files\OpenSSL-Win64\bin" "5.0.0-beta.8" "5.0.8" v4.20.11
 ```
 
 > **⏳Note:** Only Windows at the moment

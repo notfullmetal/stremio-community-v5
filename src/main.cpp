@@ -2380,7 +2380,7 @@ static void RunAutoUpdaterOnce() {
             }
         }
     }
-
+    std::cout<<"[UPDATER]: Update check done! \n";
 }
 
 static void RunInstallerAndExit() {
