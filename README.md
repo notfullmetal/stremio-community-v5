@@ -102,7 +102,7 @@
 
 - 🎨 **[AnimeJaNai](https://github.com/the-database/mpv-upscale-2x_animejanai)**
     - ❌ Not included by default.
-    - 📥 Download from the **Stremio-Desktop-v5** [release tab](https://github.com/Zaarrg/stremio-desktop-v5) the `stremio-animejanai-3.x.x.7z` for Stremio and drop the content of the 7z into `%localAppData%\Programs\LNV\Stremio-5\` and `replace all`
+    - 📥 Download from the **Stremio-Desktop-v5** [release tab](https://github.com/Zaarrg/stremio-desktop-v5/releases/5.0.0-beta.7) the `stremio-animejanai-3.x.x.7z` for Stremio and drop the content of the 7z into `%localAppData%\Programs\LNV\Stremio-5\` and `replace all`
         - 🛠️ **Changes made:**
             - Removed `mpvnet.exe` as Stremio is used as the player.
             - Adjusted `mpv.conf` to work with Stremio.
@@ -125,7 +125,7 @@
 ## 🔍 **Mpv Addons**
 
 - 🎥 **[ThumbFast](https://github.com/po5/thumbfast)**
-    - 🔧 Go in the `Stremio-Dekstop-v5` Repo to ``utils/mpv/thumbfast`` or [direct-link](https://github.com/Zaarrg/stremio-desktop-v5/tree/webview-windows/utils/mpv/thumbfast) and download ``thumbfast.7z``. Drag and Drop the archive contents into ``%localAppData%\Programs\LNV\Stremio-5\``
+    - 🔧 Go in the `Stremio-Dekstop-v5` Repo to ``utils/mpv/thumbfast`` or [direct-link](https://github.com/Zaarrg/stremio-desktop-v5/tree/webview-windows/utils/mpv/thumbfast) and download ``thumbfast.7z``. Drag and Drop the archive contents into ``%localAppData%\Programs\LNV\Stremio-5\portable_config``
     - 📁 Works best with local files as there is no **network bottleneck**. U can `Drag and Drop` any local file into **Stremio** or right click ``Open With > Stremio``
 
 > **⏳ Note:** For more details visit [mpv-portable-configs](https://github.com/Zaarrg/stremio-desktop-v5/blob/webview-windows/utils/mpv/README.md)
