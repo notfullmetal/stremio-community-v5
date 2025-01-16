@@ -62,9 +62,21 @@
     2. 💼 **Portable Version**
         - **Install using the** `Archive`. Download `stremio-5.0.0-x64.7z` or `stremio-5.0.0-x86.7z` extract it and run `stremio.exe`
     3. 🥄 **Scoop.sh**
-        - Coming Soon!
+        ```shell
+       # Install
+       scoop bucket add zarg https://github.com/zaarrg/scoop
+       scoop install stremio-desktop-v5
+       # Update
+       scoop update stremio-desktop-v5
+       ```
     4. 🍫 **Chocolatey**
-        - Coming Soon!
+        ```shell
+        # Install
+        choco install stremio-desktop-v5 -y
+        # Update
+        choco upgrade stremio-desktop-v5 -y
+        ```
+        
 
 > **⏳ Note:** If you have stremio-desktop v4.x.x installed make sure to uninstall it first. Otherwise there might be issues.
 

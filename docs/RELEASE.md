@@ -22,3 +22,17 @@ node build_checksums.js "C:\Program Files\OpenSSL-Win64\bin" "5.0.0-beta.8" "5.0
 
 > **⏳Note:** Alternatively u can separate the version bump commit. Instead:
 > Commit - Release - Build Checksums - Commit Built Checksums
+
+
+## Chocolatey
+1. ``cd utils/chocolatey``
+2. Run and bump version in ``.nuspec`` and in `choco push`:
+```shell
+ choco pack stremio.nuspec
+ choco push stremio-desktop-v5.5.0.8.nupkg --source https://push.chocolatey.org/ --api-key {api-key}
+```
+
+## Scoop
+1. Run ``build-checksums.js``
+2. Commit updated ``scoop.json``
+3. Sync scoop bucket ``node sync.js`` in ``scoop`` repo
