@@ -81,7 +81,7 @@
         # Update
         choco upgrade stremio-desktop-v5 -y
         # Uninstall
-        choco uninstall stremio-desktop --yes
+        choco uninstall stremio-desktop-v5 -y
         ```
         
 
