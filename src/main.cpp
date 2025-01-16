@@ -35,6 +35,10 @@
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
 
+//dpi
+#include <VersionHelpers.h>
+#include <shellscalingapi.h>
+#pragma comment(lib, "Shcore.lib")
 
 // WebView2
 #include "WebView2.h"
@@ -2434,6 +2438,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
 
+    case WM_DPICHANGED: {
+    // Obtain the new suggested window rect from lParam
+    RECT* const newRect = reinterpret_cast<RECT*>(lParam);
+    SetWindowPos(hWnd, NULL, newRect->left, newRect->top,
+                 newRect->right - newRect->left, newRect->bottom - newRect->top,
+                 SWP_NOZORDER | SWP_NOACTIVATE);
+    break;
+    }
+
     case WM_NOTIFY_UPDATE: {
         if (!g_pendingUpdateMsg.is_null()) {
             SendToJS(g_pendingUpdateMsg);
@@ -2639,6 +2652,20 @@ int main(int argc, char* argv[])
 {
     SetUnhandledExceptionFilter(ExceptionFilter);
     atexit(Cleanup);
+
+    if (IsWindowsVersionOrGreater(10, 0, 14393)) {
+        // Windows 10 Anniversary Update (1607) or later
+        // Dynamically get the function pointer to ensure compatibility
+        typedef BOOL(WINAPI *SetProcessDpiAwarenessContextFunc)(DPI_AWARENESS_CONTEXT);
+        auto setDpiAwarenessContext = reinterpret_cast<SetProcessDpiAwarenessContextFunc>(
+            GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetProcessDpiAwarenessContext"));
+        if (setDpiAwarenessContext) {
+            setDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        }
+    } else {
+        // Fallback for Windows 8.1 and Windows 10 before 1607:
+        SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+    }
 
     // Parse command-line arguments
     ParseCommandLineArgs(argc, argv);
