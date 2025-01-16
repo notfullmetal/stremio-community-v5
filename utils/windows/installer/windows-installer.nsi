@@ -520,7 +520,7 @@ Section "uninstall"
   done:
     ; Optionally open a farewell page
     IfSilent +2
-      ExecShell "open" "https://github.com/Zaarrg/stremio-desktop-v5/blob/master/docs/GOODBYE.md"
+      ExecShell "open" "https://github.com/Zaarrg/stremio-desktop-v5/blob/webview-windows/docs/GOODBYE.md"
 
 SectionEnd
 
