@@ -13,9 +13,13 @@
         ]
       },
       "uninstaller": {
-        "file": "$env:LOCALAPPDATA\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
-        "args": [
-          "/S"
+        "script": [
+          "$uninstaller = Join-Path $env:LOCALAPPDATA 'Programs\\LNV\\Stremio-5\\Uninstall.exe'",
+          "if (Test-Path $uninstaller) {",
+          "  Start-Process $uninstaller -ArgumentList '/S','/keepdata' -Wait",
+          "} else {",
+          "  Write-Host \"Uninstaller not found: $uninstaller\"",
+          "}"
         ]
       }
     },
@@ -28,9 +32,13 @@
         ]
       },
       "uninstaller": {
-        "file": "$env:LOCALAPPDATA\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
-        "args": [
-          "/S"
+        "script": [
+          "$uninstaller = Join-Path $env:LOCALAPPDATA 'Programs\\LNV\\Stremio-5\\Uninstall.exe'",
+          "if (Test-Path $uninstaller) {",
+          "  Start-Process $uninstaller -ArgumentList '/S','/keepdata' -Wait",
+          "} else {",
+          "  Write-Host \"Uninstaller not found: $uninstaller\"",
+          "}"
         ]
       }
     }
