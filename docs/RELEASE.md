@@ -4,7 +4,7 @@
 
 ## 🚀 Quick Overview
 
-1. Bump version in ``cmakelists``
+1. Bump version in ``cmakelists`` and ``APP_VERSION`` in ``main.cpp``
 2. Build new ``runtime`` and `installer`
 3. Make sure `installer` is in `/utils` and `server.js` in `/utils/windows`
 4. Run ``build/build_checksums.js`` this will generate `version.json` and `version-details.json` needed for the auto updater

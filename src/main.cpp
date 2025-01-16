@@ -63,7 +63,7 @@ using namespace Microsoft::WRL;
 #define APP_TITLE "Stremio - Freedom to Stream"
 #define APP_NAME "Stremio"
 #define APP_CLASS L"Stremio"
-#define APP_VERSION "5.0.0"
+#define APP_VERSION "5.0.8"
 
 static TCHAR  szWindowClass[]   = APP_NAME;
 static TCHAR  szTitle[]         = APP_TITLE;
@@ -2325,6 +2325,10 @@ static void RunAutoUpdaterOnce() {
                 }
             }
 
+            if(FileChecksum(installerPath) != expectedChecksum) {
+                AppendToCrashLog("[UPDATER]: Failed to download. File corrupted: " + installerPath.string());
+                allDownloadsSuccessful = false;
+            }
 
             if(allDownloadsSuccessful) {
                 g_installerPath = installerPath;
@@ -2371,6 +2375,10 @@ static void RunAutoUpdaterOnce() {
                     AppendToCrashLog((L"[UPDATER]: Failed to download " + std::wstring(key.begin(), key.end())).c_str());
                 } else {
                     std::cout<<"Downloaded " << key << " successfully.\n";
+                    if(FileChecksum(localFilePath) != expectedChecksum) {
+                        AppendToCrashLog("[UPDATER]: Failed to download. File corrupted: " + localFilePath.string());
+                        continue;
+                    }
                     // Perform update actions based on the file key
                     if(key == "server.js") {
                         StopNodeServer();
