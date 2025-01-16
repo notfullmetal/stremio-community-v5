@@ -6,7 +6,7 @@
   "architecture": {
     "64bit": {
       "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.8/Stremio.5.0.8-x64.exe",
-      "hash": "058470dbdaf180fb54f5221c4c06b5c1811a8058796649a103bb17bfb18eea77",
+      "hash": "316be7c97c06b5c278ab229c0400117e61cd2f6dbff9fd8d44f9eb1215ec80cc",
       "installer": {
         "args": [
           "/S"
@@ -21,7 +21,7 @@
     },
     "32bit": {
       "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.8/Stremio.5.0.8-x86.exe",
-      "hash": "3d68ff9e3e34c16dc5a97c950295237cfae8bd241ec40a42fffe260d558b49e3",
+      "hash": "4097f1ea45eb33b49e6c4547dbf787973666ce3b621d7852d2669a761dcf2e74",
       "installer": {
         "args": [
           "/S"

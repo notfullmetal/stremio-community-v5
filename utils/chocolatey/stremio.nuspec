@@ -7,7 +7,7 @@
     <authors>Zaarrg</authors>
     <owners>Zaarrg</owners>
     <projectUrl>https://github.com/Zaarrg/stremio-desktop-v5</projectUrl>
-    <description>Stremio Desktop v5 Community</description>
+    <description>Stremio Desktop v5 Community app with the latest Stremio web UI v5, built with WebView2</description>
     <tags>stremio video streaming media</tags>
     <licenseUrl>https://github.com/Zaarrg/stremio-desktop-v5/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
