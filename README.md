@@ -8,24 +8,25 @@
 <p align="center">Stremio Desktop app with the latest Stremio web UI v5, built with WebView2</p>
 <p align="center">
   <!-- C++ badge -->
-  <img src="https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white" alt="C++" />
+  <img src="https://img.shields.io/badge/%20C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white" alt="C++" />
   <!-- WebView2 badge -->
-  <img src="https://img.shields.io/badge/WebView2-0078D6?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="WebView2" />
+  <img src="https://img.shields.io/badge/🌐%20WebView2-0078D6?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="WebView2" />
   <!-- MPV badge -->
-  <img src="https://img.shields.io/badge/MPV-663399?style=for-the-badge&logo=mpv&logoColor=white" alt="MPV" />
+  <img src="https://img.shields.io/badge/%20MPV-663399?style=for-the-badge&logo=mpv&logoColor=white" alt="MPV" />
   <!-- Win32 badge -->
-  <img src="https://img.shields.io/badge/Win32-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Win32" />
+  <img src="https://img.shields.io/badge/🪟%20Win32-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Win32" />
 </p>
 <p align="center">
   <!-- Scoop badge -->
-  <img src="https://img.shields.io/badge/Scoop-80C342?style=for-the-badge&logo=scoop&logoColor=white" alt="Scoop" />
+  <img src="https://img.shields.io/badge/🪣%20Scoop-80C342?style=for-the-badge&logo=scoop&logoColor=white" alt="Scoop" />
   <!-- Chocolatey badge -->
-  <img src="https://img.shields.io/badge/Chocolatey-3C69E7?style=for-the-badge&logo=chocolatey&logoColor=white" alt="Chocolatey" />
+  <img src="https://img.shields.io/badge/%20Chocolatey-3C69E7?style=for-the-badge&logo=chocolatey&logoColor=white" alt="Chocolatey" />
   <!-- Streaming badge -->
-  <img src="https://img.shields.io/badge/Streaming-E34F26?style=for-the-badge&logo=netflix&logoColor=white" alt="Streaming" />
+  <img src="https://img.shields.io/badge/%20Streaming-E34F26?style=for-the-badge&logo=netflix&logoColor=white" alt="Streaming" />
   <!-- Torrents badge -->
-  <img src="https://img.shields.io/badge/Torrents-000000?style=for-the-badge&logo=thepiratebay&logoColor=white" alt="Torrents" />
+  <img src="https://img.shields.io/badge/🌀%20Torrents-000000?style=for-the-badge&logo=thepiratebay&logoColor=white" alt="Torrents" />
 </p>
+
 
 
 <h2>🌟 <strong>Features</strong></h2>
