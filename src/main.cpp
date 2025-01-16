@@ -50,11 +50,6 @@
 #include "resource.h"
 
 // nlohmann/json
-#include <WebView2EnvironmentOptions.h>
-#include <WebView2EnvironmentOptions.h>
-#include <WebView2EnvironmentOptions.h>
-#include <WebView2EnvironmentOptions.h>
-
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
@@ -67,7 +62,7 @@ using namespace Microsoft::WRL;
 #define APP_TITLE "Stremio - Freedom to Stream"
 #define APP_NAME "Stremio"
 #define APP_CLASS L"Stremio"
-#define APP_VERSION "5.0.9"
+#define APP_VERSION "5.0.10"
 
 static TCHAR  szWindowClass[]   = APP_NAME;
 static TCHAR  szTitle[]         = APP_TITLE;
