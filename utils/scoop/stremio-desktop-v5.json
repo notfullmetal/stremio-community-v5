@@ -13,7 +13,7 @@
         ]
       },
       "uninstaller": {
-        "file": "%LOCALAPPDATA%\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
+        "file": "$env:LOCALAPPDATA\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
         "args": [
           "/S"
         ]
@@ -28,7 +28,7 @@
         ]
       },
       "uninstaller": {
-        "file": "%LOCALAPPDATA%\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
+        "file": "$env:LOCALAPPDATA\\Programs\\LNV\\Stremio-5\\Uninstall.exe",
         "args": [
           "/S"
         ]
