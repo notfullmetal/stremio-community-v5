@@ -41,7 +41,7 @@ Ensure the following are installed on your system:
 
 1. Download vcpkg [here](https://github.com/microsoft/vcpkg).
 
-2. Install using vcpkg ``openssl:x64-windows-static``, ``nlohmann-json:x64-windows-static`` and ``curl:x64-windows-static``
+2. Install using vcpkg ``openssl:x64-windows-static``, ``nlohmann-json:x64-windows-static``, ``webview2:x64-windows-static`` and ``curl:x64-windows-static``
 
 > **⏳ Note:** To deploy x86 install the x86 versions of the dependencies above.
 

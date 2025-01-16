@@ -227,7 +227,7 @@ static bool FocusExistingInstance(const std::wstring &protocolArg)
             ShowWindow(hExistingWnd, SW_SHOW);
         }
         SetForegroundWindow(hExistingWnd);
-
+        SetFocus(hExistingWnd);
         // Send protocolArg if available
         if (!protocolArg.empty()) {
             COPYDATASTRUCT cds;
@@ -273,27 +273,6 @@ static bool CheckSingleInstance(int argc, char* argv[])
     return true;
 }
 
-LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-    if (nCode == HC_ACTION && (wParam == WM_LBUTTONDOWN || wParam == WM_RBUTTONDOWN))
-    {
-        PMSLLHOOKSTRUCT pmsh = (PMSLLHOOKSTRUCT)lParam;
-        if (g_trayHwnd)
-        {
-            RECT rc;
-            if (GetWindowRect(g_trayHwnd, &rc))
-            {
-                // If click point is outside our tray menu window, close the menu
-                if (pmsh->pt.x < rc.left || pmsh->pt.x > rc.right ||
-                    pmsh->pt.y < rc.top  || pmsh->pt.y > rc.bottom)
-                {
-                    PostMessage(g_trayHwnd, WM_CLOSE, 0, 0);
-                }
-            }
-        }
-    }
-    return CallNextHookEx(g_hMouseHook, nCode, wParam, lParam);
-}
 
 // -----------------------------------------------------------------------------
 // Helper Functions
@@ -1115,14 +1094,15 @@ static void ShowDarkTrayMenu()
     if(posY < 0) posY = 0;
     if(posY + totalH > screenHeight) posY = screenHeight - totalH;
 
+    SetCapture(hMenuWnd);
     // Set window position and size
     SetWindowPos(hMenuWnd, HWND_TOPMOST, posX, posY, w, totalH, SWP_SHOWWINDOW);
 
     CreateRoundedRegion(hMenuWnd, w, totalH, 10);
     ShowWindow(hMenuWnd, SW_SHOW);
     UpdateWindow(hMenuWnd);
-
-    g_hMouseHook = SetWindowsHookExW(WH_MOUSE_LL, LowLevelMouseProc, NULL, 0);
+    SetForegroundWindow(hMenuWnd);
+    SetFocus(hMenuWnd);
 }
 
 static LRESULT CALLBACK DarkTrayMenuProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -1235,7 +1215,7 @@ static LRESULT CALLBACK DarkTrayMenuProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
         EndPaint(hWnd, &ps);
         return 0;
     }
-        case WM_MOUSEMOVE:
+    case WM_MOUSEMOVE:
     {
         int xPos = GET_X_LPARAM(lParam);
         int yPos = GET_Y_LPARAM(lParam);
@@ -1268,14 +1248,25 @@ static LRESULT CALLBACK DarkTrayMenuProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
     }
     case WM_LBUTTONUP:
     {
+        // Get current mouse position in screen coordinates
+        POINT pt;
+        GetCursorPos(&pt);
+
+        // Get the window's rectangle in screen coordinates
+        RECT rc;
+        GetWindowRect(hWnd, &rc);
+
+        // Determine if the mouse is inside the window rectangle
+        bool inside = PtInRect(&rc, pt);
+
         // Unhook the low-level mouse hook to prevent interference
         if (g_hMouseHook) {
             UnhookWindowsHookEx(g_hMouseHook);
             g_hMouseHook = nullptr;
         }
 
-        // Check if there's a hovered, non-separator item
-        if (g_hoverIndex >= 0 && g_hoverIndex < (int)g_menuItems.size())
+        // Only process a selection if the click was inside the menu
+        if (inside && g_hoverIndex >= 0 && g_hoverIndex < (int)g_menuItems.size())
         {
             auto &it = g_menuItems[g_hoverIndex];
             if (!it.separator)
@@ -2726,6 +2717,7 @@ int main(int argc, char* argv[])
     InitWebView2(g_hWnd);
 
     SetForegroundWindow(g_hWnd);
+    SetFocus(g_hWnd);
 
     MSG msg;
     while(GetMessage(&msg,nullptr,0,0)){
