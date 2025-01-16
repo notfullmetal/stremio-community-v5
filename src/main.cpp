@@ -78,6 +78,10 @@ static HHOOK g_hMouseHook = nullptr;
 std::wstring g_webuiUrl = L"https://zaarrg.github.io/stremio-web-shell-fixes/";
 std::string g_updateUrl = "https://raw.githubusercontent.com/Zaarrg/stremio-desktop-v5/refs/heads/webview-windows/version/version.json";
 
+//Updater thread message
+#define WM_NOTIFY_UPDATE (WM_USER + 101)
+static json g_pendingUpdateMsg;
+
 //Args
 bool g_streamingServer = true;
 bool g_autoupdaterForceFull = false;
@@ -2343,7 +2347,8 @@ static void RunAutoUpdaterOnce() {
 
             json j;
             j["type"] ="requestUpdate";
-            SendToJS(j);
+            g_pendingUpdateMsg = j;
+            PostMessage(g_hWnd, WM_NOTIFY_UPDATE, 0, 0);
         } else {
             std::cout<<"Installer download failed. Skipping update prompt.\n";
         }
@@ -2435,6 +2440,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         CreateTrayIcon(hWnd);
         UpdateTheme(g_hWnd);
+        break;
+    }
+
+    case WM_NOTIFY_UPDATE: {
+        if (!g_pendingUpdateMsg.is_null()) {
+            SendToJS(g_pendingUpdateMsg);
+            g_pendingUpdateMsg = json();
+        }
         break;
     }
 
