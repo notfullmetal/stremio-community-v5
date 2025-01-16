@@ -57,6 +57,42 @@
   <img src="https://i.imgur.com/xvM5lp8.png" alt="Stremio Web Desktop Screenshot" width="600" />
 </p>
 
+
+## 🎭 Comparison
+
+- A side-by-side visual comparison of various features and enhancements in Stremio Desktop v5.
+
+<p align="center">
+  <strong>HDR Comparison</strong>
+</p>
+<p align="center">
+  <img src="https://i.imgur.com/ezh2YIa.png" alt="Stremio Web Desktop Screenshot" width="600" />
+</p>
+<p align="center">
+  <small><i>Stremio Desktop v5 vs Official Stremio v5.</i></small>
+</p>
+
+<p align="center">
+  <strong>Upscaler Comparison</strong>
+</p>
+<p align="center">
+  <img src="https://i.imgur.com/rLTmFC2.png" alt="Stremio Web Desktop Screenshot" width="600" />
+</p>
+<p align="center">
+  <small><i>Anime4k + Auto HDR vs Offical Stremio v5.</i></small>
+</p>
+
+<p align="center">
+  <strong>Thumbnail Previews</strong>
+</p>
+<p align="center">
+  <img src="https://i.imgur.com/jNPit8J.gif" alt="Descriptive Alt Text" width="600" />
+</p>
+<p align="center">
+  <small><i>Best on local files using thumbfast. Size can be adjusted.</i></small>
+</p>
+
+
 ## 🔧 Installation
 
 1. 🪟 **Windows x64 and x86**
