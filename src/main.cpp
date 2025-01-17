@@ -77,10 +77,6 @@ static HHOOK g_hMouseHook = nullptr;
 std::wstring g_webuiUrl = L"https://zaarrg.github.io/stremio-web-shell-fixes/";
 std::string g_updateUrl = "https://raw.githubusercontent.com/Zaarrg/stremio-desktop-v5/refs/heads/webview-windows/version/version.json";
 
-//Updater thread message
-#define WM_NOTIFY_UPDATE (WM_USER + 101)
-static json g_pendingUpdateMsg;
-
 //Args
 bool g_streamingServer = true;
 bool g_autoupdaterForceFull = false;
@@ -156,6 +152,7 @@ static int g_pulseDirection = -1; // -1 decrease, +1 increase
 static ULONG_PTR g_gdiplusToken = 0;
 
 // App Ready and Event Queue
+#define WM_NOTIFY_FLUSH (WM_USER + 101)
 static std::vector<json> g_pendingMessages;
 static bool             g_isAppReady = false;
 
@@ -2148,6 +2145,11 @@ bool StartNodeServer()
     g_nodeThread=std::thread(NodeOutputThreadProc);
 
     std::cout<<"Node server started.\n";
+
+    json j;
+    j["type"] ="ServerStarted";
+    g_pendingMessages.push_back(j);
+    PostMessage(g_hWnd, WM_NOTIFY_FLUSH, 0, 0);
     return true;
 }
 
@@ -2385,8 +2387,8 @@ static void RunAutoUpdaterOnce() {
 
             json j;
             j["type"] ="requestUpdate";
-            g_pendingUpdateMsg = j;
-            PostMessage(g_hWnd, WM_NOTIFY_UPDATE, 0, 0);
+            g_pendingMessages.push_back(j);
+            PostMessage(g_hWnd, WM_NOTIFY_FLUSH, 0, 0);
         } else {
             std::cout<<"Installer download failed. Skipping update prompt.\n";
         }
@@ -2490,10 +2492,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     }
 
-    case WM_NOTIFY_UPDATE: {
-        if (!g_pendingUpdateMsg.is_null()) {
-            SendToJS(g_pendingUpdateMsg);
-            g_pendingUpdateMsg = json();
+    case WM_NOTIFY_FLUSH: {
+        if (g_isAppReady) {
+            for(const auto& pendingMsg : g_pendingMessages) {
+                SendToJS(pendingMsg);
+            }
+            g_pendingMessages.clear();
         }
         break;
     }
