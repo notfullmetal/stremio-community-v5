@@ -198,6 +198,7 @@ static void  AppendToCrashLog(const std::wstring& message);
 static void  AppendToCrashLog(const std::string& message);
 bool FileExists(const std::wstring& path);
 bool DirectoryExists(const std::wstring& dirPath);
+static void refreshWeb(bool refreshAll);
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -211,6 +212,23 @@ static const wchar_t* INIT_SHELL_SCRIPT = LR"JS_CODE(
     }
 })();
 )JS_CODE";
+// Inject F5 Refresh
+const wchar_t* INJECTED_KEYDOWN_SCRIPT = LR"JS(
+(function() {
+    window.addEventListener('keydown', function(event) {
+            if (event.code === 'F5') {
+                event.preventDefault();
+                const ctrlPressed = event.ctrlKey || event.metaKey;
+                const msg = {
+                    id: 888,
+                    event: 'refresh',
+                    args: [ctrlPressed ? 'all' : 'no'],
+                };
+                window.chrome.webview.postMessage(JSON.stringify(msg));
+            }
+    });
+})();
+)JS";
 
 // -----------------------------------------------------------------------------
 // Single-instance
@@ -916,6 +934,8 @@ static void HandleInboundJSON(const std::string &msg)
                 "clear"
             };
             HandleMpvCommand(cmdArgs);
+        } else if (ev == "refresh") {
+            refreshWeb(argVec[0] == "all" ? TRUE : FALSE);
         } else {
             std::cout<<"Unknown event="<<ev<<"\n";
         }
@@ -1880,6 +1900,32 @@ static ComPtr<ICoreWebView2EnvironmentOptions> setupEnvironment() {
     return options;
 }
 
+static void refreshWeb(const bool refreshAll) {
+    if (g_webviewProfile && refreshAll)
+    {
+        HRESULT hr = g_webviewProfile->ClearBrowsingData(
+            COREWEBVIEW2_BROWSING_DATA_KINDS_DISK_CACHE |
+            COREWEBVIEW2_BROWSING_DATA_KINDS_CACHE_STORAGE |
+            COREWEBVIEW2_BROWSING_DATA_KINDS_SERVICE_WORKERS |
+            COREWEBVIEW2_BROWSING_DATA_KINDS_FILE_SYSTEMS |
+            COREWEBVIEW2_BROWSING_DATA_KINDS_WEB_SQL |
+            COREWEBVIEW2_BROWSING_DATA_KINDS_INDEXED_DB,
+            Callback<ICoreWebView2ClearBrowsingDataCompletedHandler>(
+                [](HRESULT result) -> HRESULT {
+                    std::cout << "[BROWSER]: Cleared browser cache successfully" << std::endl;
+                    return S_OK;
+                }
+            ).Get()
+        );
+        if (FAILED(hr)) {
+            std::cout << "[BROWSER]: Could not clear browser cache" << std::endl;
+        }
+    }
+    if (g_webview) {
+        g_webview->Reload();
+    }
+}
+
 
 
 static void InitWebView2(HWND hWnd)
@@ -1936,6 +1982,7 @@ static void InitWebView2(HWND hWnd)
                                 settings->put_AreDevToolsEnabled(FALSE);
                                 #endif
                                 settings->put_IsStatusBarEnabled(FALSE);
+                                settings->put_AreBrowserAcceleratorKeysEnabled(FALSE);
                                 std::wstring customUserAgent =  L"StremioShell/" + Utf8ToWstring(APP_VERSION);
                                 settings->put_UserAgent(customUserAgent.c_str());
                                 if (!g_allowZoom) {
@@ -1955,6 +2002,7 @@ static void InitWebView2(HWND hWnd)
                                 g_webviewController->put_Bounds(rc);
 
                                 g_webview->AddScriptToExecuteOnDocumentCreated(INIT_SHELL_SCRIPT,nullptr);
+                                g_webview->AddScriptToExecuteOnDocumentCreated(INJECTED_KEYDOWN_SCRIPT, nullptr);
 
                                 SetupExtensions();
                                 SetupWebMessageHandler();
