@@ -155,7 +155,8 @@ static ULONG_PTR g_gdiplusToken = 0;
 // App Ready and Event Queue
 #define WM_NOTIFY_FLUSH (WM_USER + 101)
 static std::vector<json> g_pendingMessages;
-static bool             g_isAppReady = false;
+static std::atomic<bool> g_isAppReady = false;
+static std::atomic<bool> g_waitStarted(false);
 
 // Updater
 static std::atomic_bool g_updaterRunning = false;
@@ -834,7 +835,7 @@ static void AppStart()
     j["type"] ="shellVersion";
     j["value"]   =APP_VERSION;
     SendToJS(j);
-
+    HideSplash();
     for(const auto& pendingMsg : g_pendingMessages) {
         SendToJS(pendingMsg);
     }
@@ -1699,22 +1700,79 @@ LONG WINAPI ExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo) {
 // WebView2
 // -----------------------------------------------------------------------------
 
+static void WaitAndRefreshIfNeeded() {
+    std::thread([](){
+        int attempts = 15;      // Number of total attempts
+        int waitTime = 1;      // Initial wait time in seconds
+
+        std::this_thread::sleep_for(std::chrono::seconds(waitTime));
+        std::cout << "[WEBVIEW]: Checking Web Page state..." << std::endl;
+        if(!g_isAppReady) {
+            refreshWeb(true);
+        } else {
+            std::cout << "[WEBVIEW]: Web Page ready!" << std::endl;
+            return;
+        }
+
+        waitTime++;
+
+        for(int i = 1; i < attempts; ++i) {
+            std::this_thread::sleep_for(std::chrono::seconds(waitTime));
+            std::cout << "[WEBVIEW]: Checking Web Page state..." << std::endl;
+            if (g_isAppReady) {
+                std::cout << "[WEBVIEW]: Web Page ready!" << std::endl;
+                return;
+            }
+            std::cout << "[WEBVIEW]: Web Page not ready... Refreshing..." << std::endl;
+            refreshWeb(true);
+            waitTime++;
+        }
+
+        if(!g_isAppReady) {
+            AppendToCrashLog(L"[WEBVIEW]: Web page could not be loaded after multiple attempts.");
+            MessageBoxW(
+                nullptr,
+                L"Web page could not be loaded after multiple attempts. Make sure the Web UI is reachable. Check Github for more details.",
+                L"WebView2 Page load fail",
+                MB_ICONERROR | MB_OK
+            );
+        }
+    }).detach();
+}
+
 static void SetupWebMessageHandler()
 {
     if(!g_webview)return;
     EventRegistrationToken navToken;
     g_webview->add_NavigationCompleted(
         Callback<ICoreWebView2NavigationCompletedEventHandler>(
-            [](ICoreWebView2* snd, ICoreWebView2NavigationCompletedEventArgs* args)->HRESULT
+            [](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args)->HRESULT
             {
-                snd->ExecuteScript(L"initShellComm();",nullptr);
-                if (g_hSplash) {
-                    HideSplash();
+                std::cout<<"[WEBVIEW]: Navigation Complete\n";
+                if (!g_isAppReady) {
+                    sender->ExecuteScript(L"initShellComm();", nullptr);
+                }
+                if (g_hSplash && !g_waitStarted.exchange(true)) {
+                    WaitAndRefreshIfNeeded();
                 }
                 return S_OK;
             }
         ).Get(),
         &navToken
+    );
+
+    EventRegistrationToken domToken;
+    g_webview->add_DOMContentLoaded(
+        Callback<ICoreWebView2DOMContentLoadedEventHandler>(
+            [](ICoreWebView2* sender, IUnknown* args) -> HRESULT {
+                std::cout<<"[WEBVIEW]: DOM content loaded\n";
+                if (!g_isAppReady) {
+                    sender->ExecuteScript(L"initShellComm();", nullptr);
+                }
+                return S_OK;
+            }
+        ).Get(),
+        &domToken
     );
 
     EventRegistrationToken contextMenuToken;

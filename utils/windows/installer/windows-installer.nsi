@@ -373,10 +373,24 @@ FunctionEnd
 ;    Install code     ;
 ; ------------------- ;
 Function .onInit ; check for previous version
+    ; Read the previous installation directory from registry
     ReadRegStr $0 HKCU "${UNINSTALL_KEY}" "InstallString"
-    StrCmp $0 "" done
-    StrCpy $INSTDIR $0
 
+    ; If registry value is empty, skip version check
+    StrCmp $0 "" done
+
+    ; Expected installation directory for current major version (Stremio-5)
+    StrCpy $R1 "$LOCALAPPDATA\Programs\LNV\Stremio-5"
+
+    ; Check if the registry path matches the expected directory
+    StrCmp $0 $R1 usePrev 0
+    ; If it doesn't match, likely an old version, so do not use $0
+    Goto done
+
+    usePrev:
+    ; If registry path matches the expected path, use it
+    StrCpy $INSTDIR $0
+done:
     ${GetParameters} $Parameters
     ClearErrors
     ${GetOptions} $Parameters "/addon" $R1
@@ -384,7 +398,6 @@ Function .onInit ; check for previous version
     FileOpen $0 "$INSTDIR\addons.txt" w
     FileWrite $0 "$R1"
     FileClose $0
-done:
 FunctionEnd
 
 Section ; App Files
