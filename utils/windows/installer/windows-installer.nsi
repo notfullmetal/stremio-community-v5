@@ -238,6 +238,7 @@ FunctionEnd
 Function ${un}RemoveAllExceptWebView2
   ; Hardcoded values for your scenario
   StrCpy $R0 "stremio.exe.WebView2" ; Directory to exclude
+  StrCpy $R9 "portable_config" ; Config Directory to exclude
   StrCpy $R1 "$INSTDIR"            ; Root directory to operate on
 
   Push $R2
@@ -252,8 +253,12 @@ Function ${un}RemoveAllExceptWebView2
     ; Skip special directories "." and ".."
     StrCmp $R2 "." Next
     StrCmp $R2 ".." Next
+
     ; Skip the excluded directory
     StrCmp $R2 $R0 Next
+
+    ; Skip the second excluded directory "portable_config"
+    StrCmp $R2 $R9 Next
 
     ; Build full path for the current item
     StrCpy $R4 "$R1\$R2"
@@ -395,8 +400,14 @@ Section ; App Files
     ;Set output path to InstallDir
     SetOutPath "$INSTDIR"
 
+    ; Prevent overwriting existing files
+    SetOverwrite off
+
     ;Add the files
     File /r "..\..\..\dist\win-${ARCH}\*"
+
+    ; Reset overwrite
+    SetOverwrite on
 
     ;Create uninstaller
     WriteUninstaller "$INSTDIR\Uninstall.exe"

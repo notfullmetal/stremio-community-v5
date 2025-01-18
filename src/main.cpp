@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 #include <atomic>
+#include <tlhelp32.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -63,7 +64,7 @@ using namespace Microsoft::WRL;
 #define APP_NAME "Stremio"
 #define APP_CLASS L"Stremio"
 #define APP_VERSION "5.0.11"
-
+// Please don't take this one main.cpp to seriously this was only a quick 1 week project with the main aspect being functionality not file structure ;)
 static TCHAR  szWindowClass[]   = APP_NAME;
 static TCHAR  szTitle[]         = APP_TITLE;
 
@@ -406,6 +407,40 @@ bool DirectoryExists(const std::wstring& dirPath) {
     return (attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY));
 }
 
+bool IsDuplicateProcessRunning(const std::vector<std::wstring>& targetProcesses) {
+    DWORD currentPid = GetCurrentProcessId();
+
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    PROCESSENTRY32W processEntry;
+    processEntry.dwSize = sizeof(PROCESSENTRY32W);
+
+    if (!Process32FirstW(hSnapshot, &processEntry)) {
+        CloseHandle(hSnapshot);
+        return false;
+    }
+
+    do {
+        if (processEntry.th32ProcessID == currentPid) {
+            continue;
+        }
+
+        std::wstring exeName(processEntry.szExeFile);
+        for (const auto& target : targetProcesses) {
+            if (_wcsicmp(exeName.c_str(), target.c_str()) == 0) {
+                CloseHandle(hSnapshot);
+                return true;
+            }
+        }
+    } while (Process32NextW(hSnapshot, &processEntry));
+
+    CloseHandle(hSnapshot);
+    return false;
+}
+
 // -----------------------------------------------------------------------------
 // Dark/Light theme
 // -----------------------------------------------------------------------------
@@ -461,7 +496,7 @@ static void LoadCustomMenuFont()
 // -----------------------------------------------------------------------------
 static void SendToJS(const json& j)
 {
-    if(!g_isAppReady) {
+    if(!g_isAppReady && !g_webview) {
         // If WebView is not ready, queue the message
         g_pendingMessages.push_back(j);
         return;
@@ -737,9 +772,6 @@ bool InitMPV(HWND hwnd)
     // Set VO
     mpv_set_option_string(g_mpv,"vo","gpu-next");
 
-    //Some sub settings
-    mpv_set_property_string(g_mpv, "sub-blur", "20");
-
     // demux/caching
     mpv_set_property_string(g_mpv,"demuxer-lavf-probesize",     "524288");
     mpv_set_property_string(g_mpv,"demuxer-lavf-analyzeduration","0.5");
@@ -802,7 +834,6 @@ static void AppStart()
     j["type"] ="shellVersion";
     j["value"]   =APP_VERSION;
     SendToJS(j);
-    HideSplash();
 
     for(const auto& pendingMsg : g_pendingMessages) {
         SendToJS(pendingMsg);
@@ -1046,6 +1077,12 @@ static HWND CreateDarkTrayMenuWindow()
         0, 0, 200, 200,
         nullptr, nullptr, GetModuleHandle(nullptr), nullptr
     );
+    if(!hMenuWnd) {
+        DWORD errorCode = GetLastError();
+        std::string errorMessage = std::string("[TRAY]: Failed to create tray") + std::to_string(errorCode);
+        std::cerr << errorMessage << "\n";
+        AppendToCrashLog(errorMessage);
+    }
     g_trayHwnd = hMenuWnd;
 
     return hMenuWnd;
@@ -1671,6 +1708,9 @@ static void SetupWebMessageHandler()
             [](ICoreWebView2* snd, ICoreWebView2NavigationCompletedEventArgs* args)->HRESULT
             {
                 snd->ExecuteScript(L"initShellComm();",nullptr);
+                if (g_hSplash) {
+                    HideSplash();
+                }
                 return S_OK;
             }
         ).Get(),
@@ -1884,6 +1924,12 @@ static void SetupExtensions() {
 
 static ComPtr<ICoreWebView2EnvironmentOptions> setupEnvironment() {
     auto options = Microsoft::WRL::Make<CoreWebView2EnvironmentOptions>();
+    if (!options) {
+        std::cout << "[WEBVIEW]: Failed to create WebView2 environment options." << std::endl;
+        AppendToCrashLog(L"[WEBVIEW]: Failed to create WebView2 environment options.");
+        return nullptr;
+    }
+    options->put_AdditionalBrowserArguments(L"--disable-gpu");
     ComPtr<ICoreWebView2EnvironmentOptions6> options6;
     if (options.As(&options6) == S_OK)
     {
@@ -1927,6 +1973,7 @@ static void refreshWeb(const bool refreshAll) {
 
 static void InitWebView2(HWND hWnd)
 {
+    std::cout << "[WEBVIEW]: Starting webview..." << std::endl;
     ComPtr<ICoreWebView2EnvironmentOptions> options = setupEnvironment();
     std::wstring exeDir = GetExeDirectory();
     std::wstring browserDir  = exeDir + L"\\portable_config" + L"\\EdgeWebView";
@@ -1940,7 +1987,7 @@ static void InitWebView2(HWND hWnd)
     }
 
     HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
-            browserExecutableFolder,nullptr, options.Get(),
+            browserExecutableFolder,nullptr, options ? options.Get() : nullptr,
             Callback<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler>(
                 [hWnd](HRESULT res, ICoreWebView2Environment* env)->HRESULT
                 {
@@ -1951,7 +1998,7 @@ static void InitWebView2(HWND hWnd)
                             [hWnd](HRESULT result, ICoreWebView2Controller* rawController)->HRESULT
                             {
                                 if (FAILED(result) || !rawController) return E_FAIL;
-
+                                std::cout << "[WEBVIEW]: Initializing WebView..." << std::endl;
                                 wil::com_ptr<ICoreWebView2Controller> m_webviewController = rawController;
                                 if (!m_webviewController) return E_FAIL;
 
@@ -1973,7 +2020,7 @@ static void InitWebView2(HWND hWnd)
                                 auto settings = webView2Settings.try_query<ICoreWebView2Settings8>();
                                 if (!settings) return E_FAIL;
 
-
+                                std::cout << "[WEBVIEW]: Setting up WebView settings..." << std::endl;
                                 // Setup General Settings
                                 #ifndef DEBUG_BUILD
                                 settings->put_AreDevToolsEnabled(FALSE);
@@ -2000,10 +2047,10 @@ static void InitWebView2(HWND hWnd)
 
                                 g_webview->AddScriptToExecuteOnDocumentCreated(INIT_SHELL_SCRIPT,nullptr);
                                 g_webview->AddScriptToExecuteOnDocumentCreated(INJECTED_KEYDOWN_SCRIPT, nullptr);
-
+                                std::cout << "[WEBVIEW]: Setting up WebView Handlers..." << std::endl;
                                 SetupExtensions();
                                 SetupWebMessageHandler();
-
+                                std::cout << "[WEBVIEW]: WebView started navigating to web ui." << std::endl;
                                 g_webview->Navigate(g_webuiUrl.c_str());
 
                                 return S_OK;
@@ -2722,6 +2769,11 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    std::vector<std::wstring> processesToCheck = { L"stremio.exe", L"stremio-runtime.exe" };
+    if (IsDuplicateProcessRunning(processesToCheck)) {
+        MessageBoxW(nullptr, L"An older version of Stremio, Stremio Server or Stremio Service is already running. Please close any stremio.exe or stremio-runtime.exe else there might be issues.", L"Stremio already running", MB_OK | MB_ICONWARNING);
+    }
+
     // Initialize GDI+
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     if (Gdiplus::GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, nullptr) != Gdiplus::Ok) {
@@ -2771,6 +2823,23 @@ int main(int argc, char* argv[])
 
     // Show splash screen
     CreateSplashScreen(g_hWnd);
+    // Timeout for Splashscreen
+    std::thread([]() {
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(60s);
+
+        if (g_hSplash) {
+            std::wstring error = L"[WEBVIEW]: Failed to create Web View in time, make sure WebView2 runtime is installed or provide a portable WebView2 runtime exe in portable_config/EdgeWebView. Check for potential errors in portable_config/errors-{date}.txt";
+            std::cout << WStringToUtf8(error) << std::endl;
+            AppendToCrashLog(error);
+            MessageBoxW(
+                nullptr,
+                error.c_str(),
+                L"WebView2 Initialization Timeout",
+                MB_ICONERROR | MB_OK
+            );
+        }
+    }).detach();
 
     // mpv init
     if(!InitMPV(g_hWnd)){

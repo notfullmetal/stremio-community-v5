@@ -197,6 +197,7 @@
     - If the app does not start and instantly closes, check the error log in ``portable_config\errors-{date}.txt``
   - ⚠️ **Common Issues**
       - ❗ [WebView2](https://developer.microsoft.com/de-de/microsoft-edge/webview2/#download) not installed – Installed by default using the installer but may have failed
+      - 🌎 Unreachable Web UI. Make sure you can reach the web ui hosted [here](https://zaarrg.github.io/stremio-web-shell-fixes/).
       - ⚙️ Invalid MPV configuration like ``mpv.conf``, ``input.conf`` or ``scripts``
       - 📄 Invalid ``stremio-settings.ini``
       - 🧩 Invalid ``extensions``
