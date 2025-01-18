@@ -1775,6 +1775,20 @@ static void SetupWebMessageHandler()
         &domToken
     );
 
+    EventRegistrationToken contentToken;
+    g_webview->add_ContentLoading(
+        Callback<ICoreWebView2ContentLoadingEventHandler>(
+            [](ICoreWebView2* sender, IUnknown* args) -> HRESULT {
+                std::cout<<"[WEBVIEW]: Content loaded\n";
+                if (!g_isAppReady) {
+                    sender->ExecuteScript(L"initShellComm();", nullptr);
+                }
+                return S_OK;
+            }
+        ).Get(),
+        &contentToken
+    );
+
     EventRegistrationToken contextMenuToken;
     g_webview->add_ContextMenuRequested(
         Callback<ICoreWebView2ContextMenuRequestedEventHandler>(
@@ -1987,7 +2001,7 @@ static ComPtr<ICoreWebView2EnvironmentOptions> setupEnvironment() {
         AppendToCrashLog(L"[WEBVIEW]: Failed to create WebView2 environment options.");
         return nullptr;
     }
-    options->put_AdditionalBrowserArguments(L"--disable-gpu");
+    options->put_AdditionalBrowserArguments(L"--disable-gpu --autoplay-policy=no-user-gesture-required --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable_direct_composition_video_overlays=1 --disable_direct_composition_sw_video_overlays=1");
     ComPtr<ICoreWebView2EnvironmentOptions6> options6;
     if (options.As(&options6) == S_OK)
     {
