@@ -35,6 +35,8 @@ If applicable, add screenshots or videos to help explain your problem.
 
 **Desktop (please complete the following information):**
  - OS: [e.g. Windows 11]
+ - GPU: [e.g. RTX 3080]
+ - Driver: [e.g. Game Ready Driver 566.36]
  - App Version [e.g. 5.0.11]
 
 **Additional context**
