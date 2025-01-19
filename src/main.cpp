@@ -1703,7 +1703,7 @@ LONG WINAPI ExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo) {
 static void WaitAndRefreshIfNeeded() {
     std::thread([](){
         int attempts = 15;      // Number of total attempts
-        int waitTime = 1;      // Initial wait time in seconds
+        int waitTime = 4;      // Initial wait time in seconds
 
         std::this_thread::sleep_for(std::chrono::seconds(waitTime));
         std::cout << "[WEBVIEW]: Checking Web Page state..." << std::endl;
@@ -1749,9 +1749,7 @@ static void SetupWebMessageHandler()
             [](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args)->HRESULT
             {
                 std::cout<<"[WEBVIEW]: Navigation Complete\n";
-                if (!g_isAppReady) {
-                    sender->ExecuteScript(L"initShellComm();", nullptr);
-                }
+                sender->ExecuteScript(L"initShellComm();", nullptr);
                 if (g_hSplash && !g_waitStarted.exchange(true)) {
                     WaitAndRefreshIfNeeded();
                 }
@@ -1766,9 +1764,7 @@ static void SetupWebMessageHandler()
         Callback<ICoreWebView2DOMContentLoadedEventHandler>(
             [](ICoreWebView2* sender, IUnknown* args) -> HRESULT {
                 std::cout<<"[WEBVIEW]: DOM content loaded\n";
-                if (!g_isAppReady) {
-                    sender->ExecuteScript(L"initShellComm();", nullptr);
-                }
+                sender->ExecuteScript(L"initShellComm();", nullptr);
                 return S_OK;
             }
         ).Get(),
@@ -1780,9 +1776,7 @@ static void SetupWebMessageHandler()
         Callback<ICoreWebView2ContentLoadingEventHandler>(
             [](ICoreWebView2* sender, IUnknown* args) -> HRESULT {
                 std::cout<<"[WEBVIEW]: Content loaded\n";
-                if (!g_isAppReady) {
-                    sender->ExecuteScript(L"initShellComm();", nullptr);
-                }
+                sender->ExecuteScript(L"initShellComm();", nullptr);
                 return S_OK;
             }
         ).Get(),
@@ -2001,7 +1995,7 @@ static ComPtr<ICoreWebView2EnvironmentOptions> setupEnvironment() {
         AppendToCrashLog(L"[WEBVIEW]: Failed to create WebView2 environment options.");
         return nullptr;
     }
-    options->put_AdditionalBrowserArguments(L"--disable-gpu --autoplay-policy=no-user-gesture-required --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --disable_direct_composition_video_overlays=1 --disable_direct_composition_sw_video_overlays=1");
+    options->put_AdditionalBrowserArguments(L"--autoplay-policy=no-user-gesture-required --disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection");
     ComPtr<ICoreWebView2EnvironmentOptions6> options6;
     if (options.As(&options6) == S_OK)
     {
@@ -2561,12 +2555,15 @@ static void RunInstallerAndExit() {
         return;
     }
 
+    std::wstring exeDir = GetExeDirectory();
+    std::wstring arguments = L"/overrideInstallDir=\"" + exeDir + L"\"";
+
     // Use ShellExecute to run the installer
     HINSTANCE result = ShellExecuteW(
         nullptr,
         L"open",
         g_installerPath.c_str(),
-        nullptr,
+        arguments.c_str(),
         nullptr,
         SW_HIDE
     );

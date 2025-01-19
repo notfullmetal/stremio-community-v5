@@ -398,6 +398,19 @@ done:
     FileOpen $0 "$INSTDIR\addons.txt" w
     FileWrite $0 "$R1"
     FileClose $0
+
+    ; --- Begin custom override logic ---
+    ; Check for overrideInstallDir parameter
+    ClearErrors
+    ${GetParameters} $Parameters           ; Retrieve all parameters again if needed
+    ${GetOptions} $Parameters "/overrideInstallDir=" $0
+    StrCmp $0 "" noOverride
+
+    ; If override parameter provided, override $INSTDIR
+    StrCpy $INSTDIR $0
+
+    noOverride:
+    ; --- End custom override logic ---
 FunctionEnd
 
 Section ; App Files
