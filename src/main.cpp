@@ -17,6 +17,7 @@
 #include <map>
 #include <wrl.h>
 #include <wil/com.h>
+#include <cmath>
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -40,9 +41,6 @@
 #include <VersionHelpers.h>
 #include <shellscalingapi.h>
 #pragma comment(lib, "Shcore.lib")
-
-// WebView2
-#include "WebView2.h"
 
 // mpv
 #include "mpv/client.h"
@@ -204,11 +202,13 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 // JS injection Init Shell
 static const wchar_t* INIT_SHELL_SCRIPT = LR"JS_CODE(
 (function(){
-    if (!window.initShellComm) {
-        window.initShellComm = function() {
-            console.log("[main.cpp injection] initShellComm() default called");
-        };
-    }
+    window.onload = function() {
+        try {
+            initShellComm();
+        } catch(e) {
+            console.error("Error calling initShellComm:", e);
+        }
+    };
 })();
 )JS_CODE";
 // Inject F5 Refresh
@@ -1702,33 +1702,32 @@ LONG WINAPI ExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo) {
 
 static void WaitAndRefreshIfNeeded() {
     std::thread([](){
-        int attempts = 15;      // Number of total attempts
-        int waitTime = 4;      // Initial wait time in seconds
+        const int maxAttempts = 8;
+        const int initialWaitTime = 8;
+        const int maxWaitTime = 60;
 
-        std::this_thread::sleep_for(std::chrono::seconds(waitTime));
-        std::cout << "[WEBVIEW]: Checking Web Page state..." << std::endl;
-        if(!g_isAppReady) {
-            refreshWeb(true);
-        } else {
-            std::cout << "[WEBVIEW]: Web Page ready!" << std::endl;
-            return;
-        }
+        std::cout << "[WEBVIEW]: Web Page could not be reached, retrying..." << std::endl;
+        refreshWeb(true);
 
-        waitTime++;
+        for(int attempt = 0; attempt < maxAttempts; ++attempt) {
+            int waitTime = static_cast<int>(initialWaitTime * std::pow(2.0, attempt));
+            if (waitTime > maxWaitTime) {
+                waitTime = maxWaitTime;
+            }
 
-        for(int i = 1; i < attempts; ++i) {
             std::this_thread::sleep_for(std::chrono::seconds(waitTime));
-            std::cout << "[WEBVIEW]: Checking Web Page state..." << std::endl;
+            std::cout << "[WEBVIEW]: Checking Web Page state... (Attempt " << (attempt + 1) << "), waited " << waitTime << " seconds\n";
+
             if (g_isAppReady) {
                 std::cout << "[WEBVIEW]: Web Page ready!" << std::endl;
                 return;
             }
+
             std::cout << "[WEBVIEW]: Web Page not ready... Refreshing..." << std::endl;
             refreshWeb(true);
-            waitTime++;
         }
 
-        if(!g_isAppReady) {
+        if (!g_isAppReady) {
             AppendToCrashLog(L"[WEBVIEW]: Web page could not be loaded after multiple attempts.");
             MessageBoxW(
                 nullptr,
@@ -1746,12 +1745,17 @@ static void SetupWebMessageHandler()
     EventRegistrationToken navToken;
     g_webview->add_NavigationCompleted(
         Callback<ICoreWebView2NavigationCompletedEventHandler>(
-            [](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args)->HRESULT
-            {
-                std::cout<<"[WEBVIEW]: Navigation Complete\n";
-                sender->ExecuteScript(L"initShellComm();", nullptr);
-                if (g_hSplash && !g_waitStarted.exchange(true)) {
-                    WaitAndRefreshIfNeeded();
+            [](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT {
+                BOOL isSuccess;
+                args->get_IsSuccess(&isSuccess);
+                if (isSuccess) {
+                    std::cout << "[WEBVIEW]: Navigation Complete - Success\n";
+                    sender->ExecuteScript(L"initShellComm();", nullptr);
+                } else {
+                    std::cout << "[WEBVIEW]: Navigation failed\n";
+                    if (g_hSplash && !g_waitStarted.exchange(true)) {
+                        WaitAndRefreshIfNeeded();
+                    }
                 }
                 return S_OK;
             }
@@ -1759,29 +1763,6 @@ static void SetupWebMessageHandler()
         &navToken
     );
 
-    EventRegistrationToken domToken;
-    g_webview->add_DOMContentLoaded(
-        Callback<ICoreWebView2DOMContentLoadedEventHandler>(
-            [](ICoreWebView2* sender, IUnknown* args) -> HRESULT {
-                std::cout<<"[WEBVIEW]: DOM content loaded\n";
-                sender->ExecuteScript(L"initShellComm();", nullptr);
-                return S_OK;
-            }
-        ).Get(),
-        &domToken
-    );
-
-    EventRegistrationToken contentToken;
-    g_webview->add_ContentLoading(
-        Callback<ICoreWebView2ContentLoadingEventHandler>(
-            [](ICoreWebView2* sender, IUnknown* args) -> HRESULT {
-                std::cout<<"[WEBVIEW]: Content loaded\n";
-                sender->ExecuteScript(L"initShellComm();", nullptr);
-                return S_OK;
-            }
-        ).Get(),
-        &contentToken
-    );
 
     EventRegistrationToken contextMenuToken;
     g_webview->add_ContextMenuRequested(
