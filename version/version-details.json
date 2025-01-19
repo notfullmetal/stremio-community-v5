@@ -1,13 +1,13 @@
 {
-  "shellVersion": "5.0.12",
+  "shellVersion": "5.0.13",
   "files": {
     "windows-x64": {
-      "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.12/Stremio.5.0.12-x64.exe",
-      "checksum": "e7c045800d502874b8e083427aa81d316625c658fa804e67156dddd4f03ea6ed"
+      "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.13/Stremio.5.0.13-x64.exe",
+      "checksum": "eec67b8979528ad78784012c35725d9930d88802cefb6a5338911aaa7658e5a5"
     },
     "windows-x86": {
-      "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.12/Stremio.5.0.12-x86.exe",
-      "checksum": "715ec5def305a019849b3a5e402398b53b5ed242f065266384f4428ed4c39818"
+      "url": "https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.13/Stremio.5.0.13-x86.exe",
+      "checksum": "a0263a7238dc9a7b8868c30467fea0190e6855a397b3f8b72bc4b675cd496e65"
     },
     "server.js": {
       "url": "https://dl.strem.io/server/v4.20.11/desktop/server.js",

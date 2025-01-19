@@ -63,7 +63,7 @@ using namespace Microsoft::WRL;
 #define APP_TITLE "Stremio - Freedom to Stream"
 #define APP_NAME "Stremio"
 #define APP_CLASS L"Stremio"
-#define APP_VERSION "5.0.12"
+#define APP_VERSION "5.0.13"
 // Please don't take this one main.cpp to seriously this was only a quick 1 week project with the main aspect being functionality not file structure ;)
 static TCHAR  szWindowClass[]   = APP_NAME;
 static TCHAR  szTitle[]         = APP_TITLE;
