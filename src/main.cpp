@@ -61,7 +61,7 @@ using namespace Microsoft::WRL;
 #define APP_TITLE "Stremio - Freedom to Stream"
 #define APP_NAME "Stremio"
 #define APP_CLASS L"Stremio"
-#define APP_VERSION "5.0.13"
+#define APP_VERSION "5.0.14"
 // Please don't take this one main.cpp to seriously this was only a quick 1 week project with the main aspect being functionality not file structure ;)
 static TCHAR  szWindowClass[]   = APP_NAME;
 static TCHAR  szTitle[]         = APP_TITLE;
@@ -196,6 +196,7 @@ static void  AppendToCrashLog(const std::string& message);
 bool FileExists(const std::wstring& path);
 bool DirectoryExists(const std::wstring& dirPath);
 static void refreshWeb(bool refreshAll);
+static void WaitAndRefreshIfNeeded();
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -207,6 +208,39 @@ static const wchar_t* INIT_SHELL_SCRIPT = LR"JS_CODE(
             initShellComm();
         } catch(e) {
             console.error("Error calling initShellComm:", e);
+           setTimeout(function() {
+                try {
+                    initShellComm();
+                } catch(innerError) {
+                    const errorMessage = {
+                        event: "app-error",
+                        reason: "shellComm"
+                    };
+                    if(window.chrome && window.chrome.webview && window.chrome.webview.postMessage) {
+                        window.chrome.webview.postMessage(JSON.stringify(errorMessage));
+                    } else {
+                        console.error("WebView postMessage API is not available.");
+                    }
+                }
+            }, 3000);
+        }
+    };
+})();
+)JS_CODE";
+static const wchar_t* EXEC_SHELL_SCRIPT = LR"JS_CODE(
+(function(){
+    try {
+        initShellComm();
+    } catch(e) {
+        console.error("Error exec initShellComm:", e);
+        const errorMessage = {
+            event: "app-error",
+            reason: "shellComm"
+        };
+        if(window.chrome && window.chrome.webview && window.chrome.webview.postMessage) {
+            window.chrome.webview.postMessage(JSON.stringify(errorMessage));
+        } else {
+            console.error("WebView exec postMessage API is not available.");
         }
     };
 })();
@@ -964,7 +998,13 @@ static void HandleInboundJSON(const std::string &msg)
             };
             HandleMpvCommand(cmdArgs);
         } else if (ev == "refresh") {
-            refreshWeb(argVec[0] == "all" ? TRUE : FALSE);
+            refreshWeb(argVec[0] == "all");
+        } else if (ev == "app-error") {
+            if (j.contains("reason") && j["reason"].is_string() && j["reason"].get<std::string>() == "shellComm") {
+                if (g_hSplash && !g_waitStarted.exchange(true)) {
+                    WaitAndRefreshIfNeeded();
+                }
+            }
         } else {
             std::cout<<"Unknown event="<<ev<<"\n";
         }
@@ -1702,29 +1742,30 @@ LONG WINAPI ExceptionFilter(EXCEPTION_POINTERS* ExceptionInfo) {
 
 static void WaitAndRefreshIfNeeded() {
     std::thread([](){
-        const int maxAttempts = 8;
-        const int initialWaitTime = 8;
+        const int maxAttempts = 10;
+        const int initialWaitTime = 5;
         const int maxWaitTime = 60;
 
         std::cout << "[WEBVIEW]: Web Page could not be reached, retrying..." << std::endl;
-        refreshWeb(true);
 
         for(int attempt = 0; attempt < maxAttempts; ++attempt) {
-            int waitTime = static_cast<int>(initialWaitTime * std::pow(2.0, attempt));
+            int waitTime = static_cast<int>(initialWaitTime * std::pow(1.25, attempt));
             if (waitTime > maxWaitTime) {
                 waitTime = maxWaitTime;
             }
-
+            std::cout << "[WEBVIEW]: Web Page attempted at " << attempt << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(waitTime));
-            std::cout << "[WEBVIEW]: Checking Web Page state... (Attempt " << (attempt + 1) << "), waited " << waitTime << " seconds\n";
+            std::cout << "[WEBVIEW]: Checking Web Page state... (Attempt " << (attempt + 1) << "), waited " << waitTime << " seconds\n" << std::endl;
+
 
             if (g_isAppReady) {
                 std::cout << "[WEBVIEW]: Web Page ready!" << std::endl;
+                g_waitStarted.store(false);
                 return;
             }
 
             std::cout << "[WEBVIEW]: Web Page not ready... Refreshing..." << std::endl;
-            refreshWeb(true);
+            refreshWeb(false);
         }
 
         if (!g_isAppReady) {
@@ -1735,6 +1776,8 @@ static void WaitAndRefreshIfNeeded() {
                 L"WebView2 Page load fail",
                 MB_ICONERROR | MB_OK
             );
+            PostQuitMessage(1);
+            exit(1);
         }
     }).detach();
 }
@@ -1750,7 +1793,7 @@ static void SetupWebMessageHandler()
                 args->get_IsSuccess(&isSuccess);
                 if (isSuccess) {
                     std::cout << "[WEBVIEW]: Navigation Complete - Success\n";
-                    sender->ExecuteScript(L"initShellComm();", nullptr);
+                    sender->ExecuteScript(EXEC_SHELL_SCRIPT, nullptr);
                 } else {
                     std::cout << "[WEBVIEW]: Navigation failed\n";
                     if (g_hSplash && !g_waitStarted.exchange(true)) {
@@ -1763,6 +1806,29 @@ static void SetupWebMessageHandler()
         &navToken
     );
 
+    EventRegistrationToken contentToken;
+    g_webview->add_ContentLoading(
+        Callback<ICoreWebView2ContentLoadingEventHandler>(
+            [](ICoreWebView2* sender, ICoreWebView2ContentLoadingEventArgs* args) -> HRESULT {
+                std::cout<<"[WEBVIEW]: Content loaded\n";
+                sender->ExecuteScript(EXEC_SHELL_SCRIPT, nullptr);
+                return S_OK;
+            }
+        ).Get(),
+        &contentToken
+    );
+
+    EventRegistrationToken domToken;
+    g_webview->add_DOMContentLoaded(
+        Callback<ICoreWebView2DOMContentLoadedEventHandler>(
+            [](ICoreWebView2* sender, ICoreWebView2DOMContentLoadedEventArgs* args) -> HRESULT {
+                std::cout<<"[WEBVIEW]: DOM content loaded\n";
+                sender->ExecuteScript(EXEC_SHELL_SCRIPT, nullptr);
+                return S_OK;
+            }
+        ).Get(),
+        &domToken
+    );
 
     EventRegistrationToken contextMenuToken;
     g_webview->add_ContextMenuRequested(
@@ -2099,7 +2165,7 @@ static void InitWebView2(HWND hWnd)
                                 SetupWebMessageHandler();
                                 std::cout << "[WEBVIEW]: WebView started navigating to web ui." << std::endl;
                                 g_webview->Navigate(g_webuiUrl.c_str());
-
+                                std::cout << "[WEBVIEW]: WebView navigated...." << std::endl;
                                 return S_OK;
                             }
                         ).Get()
@@ -2873,23 +2939,6 @@ int main(int argc, char* argv[])
 
     // Show splash screen
     CreateSplashScreen(g_hWnd);
-    // Timeout for Splashscreen
-    std::thread([]() {
-        using namespace std::chrono_literals;
-        std::this_thread::sleep_for(60s);
-
-        if (g_hSplash) {
-            std::wstring error = L"[WEBVIEW]: Failed to create Web View in time, make sure WebView2 runtime is installed or provide a portable WebView2 runtime exe in portable_config/EdgeWebView. Check for potential errors in portable_config/errors-{date}.txt";
-            std::cout << WStringToUtf8(error) << std::endl;
-            AppendToCrashLog(error);
-            MessageBoxW(
-                nullptr,
-                error.c_str(),
-                L"WebView2 Initialization Timeout",
-                MB_ICONERROR | MB_OK
-            );
-        }
-    }).detach();
 
     // mpv init
     if(!InitMPV(g_hWnd)){
