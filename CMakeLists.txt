@@ -29,6 +29,28 @@ find_package(unofficial-webview2 CONFIG REQUIRED)
 set(SOURCES
         src/main.cpp
         stremio.rc
+        src/core/globals.h
+        src/core/globals.cpp
+        src/utils/helpers.h
+        src/utils/helpers.cpp
+        src/utils/config.h
+        src/utils/config.cpp
+        src/utils/crashlog.h
+        src/utils/crashlog.cpp
+        src/mpv/player.h
+        src/mpv/player.cpp
+        src/node/server.cpp
+        src/node/server.h
+        src/tray/tray.h
+        src/tray/tray.cpp
+        src/ui/splash.h
+        src/ui/splash.cpp
+        src/updater/updater.cpp
+        src/updater/updater.h
+        src/webview/webview.h
+        src/webview/webview.cpp
+        src/ui/mainwindow.h
+        src/ui/mainwindow.cpp
         src/resource.h
 )
 
@@ -36,12 +58,10 @@ add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-        user32.lib
-        gdi32.lib
-        ole32.lib
-        oleaut32.lib
-        shell32.lib
-        advapi32.lib
+        gdiplus.lib
+        dwmapi.lib
+        Shcore.lib
+        Msimg32.lib
         nlohmann_json::nlohmann_json
         unofficial::webview2::webview2
         OpenSSL::SSL
