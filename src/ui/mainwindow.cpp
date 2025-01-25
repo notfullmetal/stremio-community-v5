@@ -40,7 +40,7 @@ bool FocusExistingInstance(const std::wstring &protocolArg)
     return false;
 }
 
-bool CheckSingleInstance(int argc, char* argv[])
+bool CheckSingleInstance(int argc, char* argv[], std::wstring &outProtocolArg)
 {
     g_hMutex = CreateMutexW(nullptr, FALSE, L"SingleInstanceMtx_StremioWebShell");
     if(!g_hMutex){
@@ -65,6 +65,7 @@ bool CheckSingleInstance(int argc, char* argv[])
         FocusExistingInstance(protocolArg);
         return false;
     }
+    outProtocolArg = protocolArg;
     return true;
 }
 
@@ -204,7 +205,7 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
         refreshWeb(args.size()>0 && args[0]=="all");
     } else if(ev=="app-error"){
         if(!args.empty() && args.size()>0 && args[0] == "shellComm"){
-            if(g_hSplash && !g_waitStarted.exchange(true)){
+            if(!g_isAppReady && !g_waitStarted.exchange(true)){
                 WaitAndRefreshIfNeeded();
             }
         }
@@ -329,6 +330,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 SendToJS(pendingMsg["type"], pendingMsg);
             }
             g_outboundMessages.clear();
+
+            if(!g_launchProtocol.empty()) {
+                COPYDATASTRUCT cds;
+                cds.dwData = 1;
+                cds.cbData = static_cast<DWORD>((g_launchProtocol.size()+1) * sizeof(wchar_t));
+                cds.lpData = (PVOID)g_launchProtocol.c_str();
+                SendMessage(g_hWnd, WM_COPYDATA, (WPARAM)g_hWnd, (LPARAM)&cds);
+                g_launchProtocol.clear();
+            }
         }
         break;
     }
@@ -430,6 +440,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     j["path"] = utf8FilePath;
                     SendToJS("OpenFile", j);
                 }
+            } else if (receivedUrl.rfind(L"stremio://detail", 0) == 0) {
+                std::string utf8Url = WStringToUtf8(receivedUrl);
+                json j;
+                j["type"] = "ReplaceLocation";
+                j["path"] = utf8Url;
+                SendToJS("ReplaceLocation", j);
             } else if (receivedUrl.rfind(L"stremio://", 0) == 0) {
                 // Handle stremio:// protocol
                 std::string utf8Url = WStringToUtf8(receivedUrl);

@@ -119,8 +119,8 @@ extern ULONG_PTR  g_gdiplusToken;
 
 // App Ready and Event Queue
 #define WM_NOTIFY_FLUSH (WM_USER + 101)
-extern std::vector<nlohmann::json> g_inboundMessages;
 extern std::vector<nlohmann::json> g_outboundMessages;
+extern std::wstring g_launchProtocol;
 extern std::atomic<bool> g_isAppReady;
 extern std::atomic<bool> g_waitStarted;
 

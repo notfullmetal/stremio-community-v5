@@ -33,10 +33,16 @@ try {
         try {
           initShellComm();
         } catch (e) {
-          const errorMessage = {
-            event: "app-error",
-            reason: "shellComm"
-          };
+            const errorMessage = {
+              type: 6,
+              object: "transport",
+              method: "handleInboundJSON",
+              id: 888,
+              args: [
+                "app-error",
+                [ "shellComm" ]
+              ]
+            };
           window.chrome.webview.postMessage(JSON.stringify(errorMessage));
         }
       };

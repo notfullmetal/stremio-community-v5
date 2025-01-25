@@ -66,8 +66,8 @@ int        g_pulseDirection = -1;
 ULONG_PTR  g_gdiplusToken = 0;
 
 // Pending messages
-std::vector<nlohmann::json> g_inboundMessages;
 std::vector<nlohmann::json> g_outboundMessages;
+std::wstring g_launchProtocol;
 std::atomic<bool>  g_isAppReady   = false;
 std::atomic<bool>  g_waitStarted(false);
 

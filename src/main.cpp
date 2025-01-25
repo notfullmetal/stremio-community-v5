@@ -61,9 +61,11 @@ int main(int argc, char* argv[])
     }
 
     // single instance
-    if(!CheckSingleInstance(argc, argv)){
+    std::wstring launchProtocol;
+    if(!CheckSingleInstance(argc, argv, launchProtocol)){
         return 0;
     }
+    g_launchProtocol = launchProtocol;
 
     // check stremio-runtime duplicates
     std::vector<std::wstring> processesToCheck={L"stremio.exe", L"stremio-runtime.exe"};

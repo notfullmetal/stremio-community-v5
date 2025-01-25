@@ -24,8 +24,9 @@ static void NodeOutputThreadProc()
 
 bool StartNodeServer()
 {
-    std::wstring exePath = L"stremio-runtime.exe";
-    std::wstring scriptPath = L"server.js";
+    std::wstring exeDir   = GetExeDirectory();
+    std::wstring exePath = exeDir + L"\\stremio-runtime.exe";
+    std::wstring scriptPath = exeDir + L"\\server.js";
     if(!FileExists(exePath)){
         AppendToCrashLog(L"[NODE]: Missing stremio-runtime.exe");
         return false;
