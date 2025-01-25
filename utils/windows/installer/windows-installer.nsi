@@ -229,10 +229,64 @@ Function fin_pg_leave
     ${EndIf}
 FunctionEnd
 
+!macro RemoveAllExceptDefaultProfile un
+Function ${un}RemoveAllExceptDefaultProfile
+  ; Hardcoded values for your scenario
+  StrCpy $R0 "Default" ; Directory to exclude
+  StrCpy $R1 "$INSTDIR\stremio.exe.WebView2\EBWebView"            ; Root directory to operate on
+
+  Push $R2
+  Push $R3
+  Push $R4
+
+  ClearErrors
+  FindFirst $R3 $R2 "$R1\*.*"
+  IfErrors Exit
+
+  Top:
+    ; Skip special directories "." and ".."
+    StrCmp $R2 "." Next
+    StrCmp $R2 ".." Next
+
+    ; Skip the excluded directory
+    StrCmp $R2 $R0 Next
+
+    ; Build full path for the current item
+    StrCpy $R4 "$R1\$R2"
+
+    ; Check if the current item is a directory
+    IfFileExists "$R4\*.*" isDir notDir
+
+    notDir:
+      ; It's a file, so delete it
+      Delete "$R4"
+      Goto Next
+
+    isDir:
+      ; It's a directory, remove it recursively
+      RMDir /r "$R4"
+    Next:
+      ClearErrors
+      FindNext $R3 $R2
+      IfErrors Exit
+    Goto Top
+
+  Exit:
+    FindClose $R3
+
+  Pop $R4
+  Pop $R3
+  Pop $R2
+FunctionEnd
+!macroend
+
+!insertmacro RemoveAllExceptDefaultProfile ""
+!insertmacro RemoveAllExceptDefaultProfile "un."
+
 
 ; ---------------------------------------------------
 ;  Removes everything from $INSTDIR except the
-;  "stremio.exe.WebView2" folder.
+;  "stremio.exe.WebView2\stremio.exe.WebView2\EBWebView" and "portable_config" folder.
 ; ---------------------------------------------------
 !macro RemoveAllExceptWebView2 un
 Function ${un}RemoveAllExceptWebView2
@@ -286,6 +340,7 @@ Function ${un}RemoveAllExceptWebView2
   Pop $R4
   Pop $R3
   Pop $R2
+  Call ${un}RemoveAllExceptDefaultProfile
 FunctionEnd
 !macroend
 
