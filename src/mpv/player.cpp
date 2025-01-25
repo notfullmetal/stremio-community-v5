@@ -140,27 +140,24 @@ void HandleMpvEvents()
             nlohmann::json j;
             j["type"]="mpv-event-ended";
             switch(ef->reason){
-            case MPV_END_FILE_REASON_EOF:
-                j["reason"]="quit";
+                case MPV_END_FILE_REASON_EOF:
+                    j["reason"]="quit";
                 SendToJS("mpv-event-ended", j);
                 break;
-            case MPV_END_FILE_REASON_ERROR:
-            {
-                std::string err = mpv_error_string(ef->error);
-                std::string capitalized = capitalizeFirstLetter(err);
-                j["reason"]="error";
-                if(ef->error<0)
-                    j["error"]= capitalized;
-                AppendToCrashLog("[MPV]: " + capitalized);
-                SendToJS("mpv-event-ended", j);
-                break;
-            }
-            default:
-                j["reason"]="other";
-                SendToJS("mpv-event-ended", j);
+                case MPV_END_FILE_REASON_ERROR: {
+                    std::string errorString = mpv_error_string(ef->error);
+                    std::string capitalizedErrorString = capitalizeFirstLetter(errorString);
+                    j["reason"]="error";
+                    if(ef->error<0)
+                        j["error"]= capitalizedErrorString;
+                    SendToJS("mpv-event-ended", j);
+                    AppendToCrashLog("[MPV]: " + capitalizedErrorString);
+                    break;
+                }
+                default:
+                    j["reason"]="other";
                 break;
             }
-            PostMessage(g_hWnd, WM_NOTIFY_FLUSH, 0, 0);
             break;
         }
         case MPV_EVENT_SHUTDOWN:

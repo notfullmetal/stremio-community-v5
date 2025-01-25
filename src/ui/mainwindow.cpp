@@ -140,12 +140,63 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
     } else if(ev=="mpv-observe-prop"){
         HandleMpvObserveProp(args);
     } else if(ev=="app-ready"){
-        std::cout<<"[Native->JS] APP READY"<<"\n" << std::endl;
         g_isAppReady=true;
         HideSplash();
         PostMessage(g_hWnd, WM_NOTIFY_FLUSH, 0, 0);
     } else if(ev=="update-requested"){
         RunInstallerAndExit();
+    } else if(ev == "seek-hover") {
+        if (g_thumbFastHeight == 0) return;
+        if(g_ignoreHover) {
+            auto now = std::chrono::steady_clock::now();
+            if(now < g_ignoreUntil) {
+                return;
+            }
+            g_ignoreHover = false;
+        }
+
+        // Expecting arguments: hovered_seconds, x, y
+        if(args.size() < 3) {
+            std::cerr << "seek-hover requires at least 3 arguments.\n";
+            return;
+        }
+
+        // Convert the y-coordinate from string to an integer
+        int yCoord = 0;
+        try {
+            yCoord = std::stoi(args[2]);
+        } catch(const std::exception &e) {
+            std::cerr << "Error converting y coordinate: " << e.what() << "\n";
+            return;
+        }
+
+        // Subtract the thumb fast height from y
+        int adjustedY = yCoord - g_thumbFastHeight;
+
+        // Prepare command for thumbfast with adjusted y-coordinate
+        std::vector<std::string> cmdArgs = {
+            "script-message-to",
+            "thumbfast",
+            "thumb",
+            args[0],              // hovered_seconds
+            args[1],              // x
+            std::to_string(adjustedY)  // y with offset
+        };
+
+        HandleMpvCommand(cmdArgs);
+    }
+    else if(ev == "seek-leave") {
+        if (g_thumbFastHeight == 0) return;
+        // Set ignore flag and calculate ignore-until timestamp
+        g_ignoreHover = true;
+        g_ignoreUntil = std::chrono::steady_clock::now() + IGNORE_DURATION;
+
+        std::vector<std::string> cmdArgs = {
+            "script-message-to",
+            "thumbfast",
+            "clear"
+        };
+        HandleMpvCommand(cmdArgs);
     } else if(ev=="start-drag"){
         ReleaseCapture();
         SendMessageW(g_hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
@@ -167,7 +218,9 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
 void HandleInboundJSON(const std::string &msg)
 {
     try {
+#ifdef DEBUG_BUILD
         std::cout << "[JS -> NATIVE]: " << msg << std::endl;
+#endif
 
         auto j = nlohmann::json::parse(msg);
         int type = 0;

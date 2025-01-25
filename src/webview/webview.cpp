@@ -414,14 +414,15 @@ static void SetupWebMessageHandler()
     EventRegistrationToken cfeToken;
     g_webview->add_ContainsFullScreenElementChanged(
         Microsoft::WRL::Callback<ICoreWebView2ContainsFullScreenElementChangedEventHandler>(
-        [](ICoreWebView2* sender, IUnknown*){
-            BOOL inFull = FALSE;
-            sender->get_ContainsFullScreenElement(&inFull);
-            g_isFullscreen = inFull;
-            // Toggle here or in WndProc
-            PostMessage(g_hWnd, WM_NOTIFY_FLUSH, 0, 0);
-            return S_OK;
-        }).Get(),
+            [](ICoreWebView2* sender, IUnknown* /*args*/) -> HRESULT
+            {
+                // FullScreen Toggle Handle
+                BOOL inFull = FALSE;
+                sender->get_ContainsFullScreenElement(&inFull);
+                ToggleFullScreen(g_hWnd, inFull != FALSE);
+                return S_OK;
+            }
+        ).Get(),
         &cfeToken
     );
 }
