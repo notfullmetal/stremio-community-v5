@@ -29,6 +29,13 @@ void LoadSettings()
     g_allowZoom = GetPrivateProfileIntW(L"General", L"AllowZoom", 0, iniPath.c_str());
     g_pauseOnMinimize = (GetPrivateProfileIntW(L"General", L"PauseOnMinimize", 1, iniPath.c_str()) == 1);
     g_pauseOnLostFocus = (GetPrivateProfileIntW(L"General", L"PauseOnLostFocus", 0, iniPath.c_str()) == 1);
+    //Mpv
+    wchar_t voBuffer[32];
+    GetPrivateProfileStringW(L"MPV", L"VideoOutput", L"gpu-next", voBuffer, 32, iniPath.c_str());
+    char narrowVO[32];
+    WideCharToMultiByte(CP_UTF8, 0, voBuffer, -1, narrowVO, 32, NULL, NULL);
+    g_initialVO = narrowVO;
+    g_currentVolume = GetPrivateProfileIntW(L"MPV", L"InitialVolume", 50, iniPath.c_str());
 }
 
 void SaveSettings()

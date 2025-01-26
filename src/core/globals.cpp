@@ -20,6 +20,9 @@ bool g_autoupdaterForceFull = false;
 // mpv
 mpv_handle* g_mpv = nullptr;
 std::set<std::string> g_observedProps;
+bool g_initialSet = false;
+std::string g_initialVO = "gpu-next";
+int g_currentVolume = 50;
 
 // Node
 std::atomic_bool g_nodeRunning = false;

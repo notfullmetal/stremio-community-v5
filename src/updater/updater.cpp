@@ -181,6 +181,17 @@ void RunAutoUpdaterOnce()
             std::string filename = url.substr(url.find_last_of('/') + 1);
             std::filesystem::path installerPath = tempDir / std::wstring(filename.begin(), filename.end());
 
+            // Cleanup: Delete all files in tempDir except the current installer
+            for (const auto& entry : std::filesystem::directory_iterator(tempDir)) {
+                if (entry.path() != installerPath) {
+                    try {
+                        std::filesystem::remove_all(entry.path());
+                    } catch (const std::exception& e) {
+                        AppendToCrashLog("[UPDATER]: Cleanup failed for " + entry.path().string() + ": " + e.what());
+                    }
+                }
+            }
+
             if(std::filesystem::exists(installerPath)) {
                 if(FileChecksum(installerPath) != expectedChecksum) {
                     std::filesystem::remove(installerPath);

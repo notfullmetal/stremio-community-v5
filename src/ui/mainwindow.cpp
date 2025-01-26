@@ -134,6 +134,11 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
     if(ev=="mpv-command"){
         if(!args.empty() && args[0] == "loadfile" && args.size() > 1) {
             args[1] = decodeURIComponent(args[1]);
+            std::vector<std::string> voArgs = {"vo",g_initialVO};
+            HandleMpvSetProp(voArgs);
+            std::vector<std::string> volumeArgs = {"volume", std::to_string(g_currentVolume)};
+            HandleMpvSetProp(volumeArgs);
+            g_initialSet = true;
         }
         HandleMpvCommand(args);
     } else if(ev=="mpv-set-prop"){
@@ -487,6 +492,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         if(LOWORD(wParam)==WA_INACTIVE){
             pauseMPV(g_pauseOnLostFocus);
+        }
+        if (LOWORD(wParam) != WA_INACTIVE)
+        {
+            SetFocus(hWnd);
+            if (g_webview && g_webviewController) {
+                g_webviewController->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
+            }
         }
         break;
     }

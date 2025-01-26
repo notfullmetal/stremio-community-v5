@@ -131,6 +131,9 @@ void HandleMpvEvents()
                     j["data"]=nullptr;
                 break;
             }
+            if (j["name"] == "volume" && g_initialSet) {
+                g_currentVolume = j["data"];
+            }
             SendToJS("mpv-prop-change", j);
             break;
         }
