@@ -122,7 +122,7 @@ void SendToJS(const std::string &eventName, const nlohmann::json &eventData)
     // Serialize to wstring + Post
     std::string payload = msg.dump();
     std::wstring wpayload(payload.begin(), payload.end());
-    g_webview->PostWebMessageAsJson(wpayload.c_str());
+    g_webview->PostWebMessageAsString(wpayload.c_str());
 
 #ifdef DEBUG_BUILD
     std::cout << "[Native->JS] " << payload << "\n";
@@ -255,7 +255,7 @@ void HandleInboundJSON(const std::string &msg)
 
             std::string payload = root.dump();
             std::wstring wpayload(payload.begin(), payload.end());
-            g_webview->PostWebMessageAsJson(wpayload.c_str());
+            g_webview->PostWebMessageAsString(wpayload.c_str());
             return;
         }
 
