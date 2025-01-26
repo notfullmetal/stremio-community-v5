@@ -133,7 +133,9 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
 {
     if(ev=="mpv-command"){
         if(!args.empty() && args[0] == "loadfile" && args.size() > 1) {
-            args[1] = decodeURIComponent(args[1]);
+            if (args[1].rfind("http://", 0) != 0 && args[1].rfind("https://", 0) != 0) {
+                args[1] = decodeURIComponent(args[1]);
+            }
             std::vector<std::string> voArgs = {"vo",g_initialVO};
             HandleMpvSetProp(voArgs);
             std::vector<std::string> volumeArgs = {"volume", std::to_string(g_currentVolume)};
