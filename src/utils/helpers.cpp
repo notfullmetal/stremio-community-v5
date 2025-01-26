@@ -1,6 +1,6 @@
 #include "helpers.h"
 #include <tlhelp32.h>
-#include <iostream>
+#include "../core/globals.h"
 
 std::string WStringToUtf8(const std::wstring &wstr)
 {
@@ -109,4 +109,11 @@ std::wstring GetExeDirectory()
     if(pos!=std::wstring::npos)
         path.erase(pos);
     return path;
+}
+
+bool isSubtitle(const std::wstring& filePath) {
+    std::wstring lowerFilePath = filePath;
+    std::transform(lowerFilePath.begin(), lowerFilePath.end(), lowerFilePath.begin(), towlower);
+    return std::any_of(g_subtitleExtensions.begin(), g_subtitleExtensions.end(),
+        [&](const std::wstring& ext) { return lowerFilePath.ends_with(ext); });
 }

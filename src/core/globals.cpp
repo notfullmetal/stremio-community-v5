@@ -23,7 +23,12 @@ std::set<std::string> g_observedProps;
 bool g_initialSet = false;
 std::string g_initialVO = "gpu-next";
 int g_currentVolume = 50;
-
+const std::vector<std::wstring> g_subtitleExtensions = {
+    L".srt", L".ass", L".ssa", L".sub", L".vtt", L".ttml",
+    L".dfxp", L".smi", L".sami", L".sup", L".scc",
+    L".xml", L".lrc", L".pjs", L".mpl", L".usf",
+    L".qtvr"
+};
 // Node
 std::atomic_bool g_nodeRunning = false;
 std::thread      g_nodeThread;

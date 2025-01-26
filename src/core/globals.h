@@ -54,6 +54,7 @@ extern std::set<std::string> g_observedProps;
 extern bool g_initialSet;
 extern std::string g_initialVO;
 extern int g_currentVolume;
+extern const std::vector<std::wstring> g_subtitleExtensions;
 
 // custom messages
 #define WM_MPV_WAKEUP (WM_APP + 2)

@@ -1,6 +1,5 @@
 #include "webview.h"
 #include <string>
-#include <vector>
 #include <thread>
 #include <cmath>
 #include <iostream>
@@ -400,13 +399,18 @@ static void SetupWebMessageHandler()
                     {
                         std::wstring filePath = wuri.substr(8);
                         std::string utf8FilePath = WStringToUtf8(filePath);
+
+                        if (isSubtitle(filePath)) {
+                            std::vector<std::string> subaddArgs = {"sub-add",utf8FilePath};
+                            HandleEvent("mpv-command", subaddArgs);
+                            return S_OK;
+                        }
                         json j;
                         j["type"] = "FileDropped";
                         j["path"] = utf8FilePath;
                         SendToJS("FileDropped", j);
                         return S_OK;
                     }
-
                     // For non-file URIs, open externally
                     ShellExecuteW(nullptr, L"open", uri.get(), nullptr, nullptr, SW_SHOWNORMAL);
                 }

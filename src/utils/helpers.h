@@ -13,5 +13,6 @@ std::wstring GetExeDirectory();
 bool FileExists(const std::wstring& path);
 bool DirectoryExists(const std::wstring& dirPath);
 bool IsDuplicateProcessRunning(const std::vector<std::wstring>& targetProcesses);
+bool isSubtitle(const std::wstring& filePath);
 
 #endif // HELPERS_H
