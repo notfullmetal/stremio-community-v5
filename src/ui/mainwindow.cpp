@@ -402,6 +402,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case ID_TRAY_QUIT:
             if(g_mpv) mpv_command_string(g_mpv,"quit");
+            WINDOWPLACEMENT wp;
+            wp.length = sizeof(wp);
+            if (GetWindowPlacement(hWnd, &wp)) {
+                SaveWindowPlacement(wp);
+            }
             DestroyWindow(hWnd);
             break;
         }
