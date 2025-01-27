@@ -48,6 +48,7 @@ const VCPKG_CMAKE = 'C:/bin/vcpkg/scripts/buildsystems/vcpkg.cmake';
         const args = process.argv.slice(2);
         const buildInstaller = args.includes('--installer');
         const buildPortable = args.includes('--portable');
+        const debugBuild = args.includes('--debug');
 
         // 3) Run CMake + Ninja in ../cmake-build-release (64-bit)
         if (!fs.existsSync(BUILD_DIR)) {
@@ -57,7 +58,7 @@ const VCPKG_CMAKE = 'C:/bin/vcpkg/scripts/buildsystems/vcpkg.cmake';
         console.log('\n=== Running CMake in cmake-build-release ===');
         process.chdir(BUILD_DIR);
         execSync(
-            `cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${VCPKG_CMAKE} -DVCPKG_TARGET_TRIPLET=${VCPKG_TRIPLET} ..`,
+            `cmake -G Ninja -DCMAKE_BUILD_TYPE=${debugBuild ? "Debug" : "Release"} -DCMAKE_TOOLCHAIN_FILE=${VCPKG_CMAKE} -DVCPKG_TARGET_TRIPLET=${VCPKG_TRIPLET} ..`,
             { stdio: 'inherit' }
         );
         console.log('=== Running Ninja in cmake-build-release ===');
