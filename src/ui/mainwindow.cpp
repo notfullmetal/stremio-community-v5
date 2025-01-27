@@ -216,8 +216,10 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
                 WaitAndRefreshIfNeeded();
             }
         }
-    }
-    else {
+    } else if (ev=="open-external") {
+        std::wstring uri(args[0].begin(), args[0].end());
+        ShellExecuteW(nullptr, L"open", uri.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+    } else {
         std::cout<<"Unknown event="<<ev<<"\n";
     }
 }
@@ -262,7 +264,7 @@ void HandleInboundJSON(const std::string &msg)
         if (type == 6 && j.contains("method"))
         {
             std::string methodName = j["method"].get<std::string>();
-            if (methodName == "handleInboundJSON")
+            if (methodName == "handleInboundJSON" || methodName == "onEvent")
             {
                 if (j["args"].is_array() && !j["args"].empty())
                 {
