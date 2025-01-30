@@ -10,7 +10,7 @@ HBRUSH    g_darkBrush = nullptr;
 HANDLE    g_hMutex  = nullptr;
 HHOOK     g_hMouseHook = nullptr;
 
-std::wstring g_webuiUrl = L"https://zaarrg.github.io/stremio-web-shell-fixes/";
+std::wstring g_webuiUrl = L"https://stremio.zarg.me/";
 std::string  g_updateUrl= "https://raw.githubusercontent.com/Zaarrg/stremio-desktop-v5/refs/heads/webview-windows/version/version.json";
 
 // Command-line args
