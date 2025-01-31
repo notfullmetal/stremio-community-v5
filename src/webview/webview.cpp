@@ -218,8 +218,12 @@ void InitWebView2(HWND hWnd)
                     SetupExtensions();
                     SetupWebMessageHandler();
 
-                    std::wcout << L"[WEBVIEW]: Navigating to " << g_webuiUrl << std::endl;
-                    g_webview->Navigate(g_webuiUrl.c_str());
+                    std::thread([](){
+                        std::wcout << L"[WEBVIEW]: Checking web ui endpoints..." << std::endl;
+                        std::wstring foundUrl = GetFirstReachableUrl();
+                        std::wstring* pResult = new std::wstring(foundUrl);
+                        PostMessage(g_hWnd, WM_REACHABILITY_DONE, (WPARAM)pResult, 0);
+                    }).detach();
                     return S_OK;
                 }).Get()
             );

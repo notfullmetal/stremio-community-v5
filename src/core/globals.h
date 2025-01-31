@@ -41,7 +41,7 @@ extern HBRUSH    g_darkBrush;
 extern HANDLE    g_hMutex;
 extern HHOOK     g_hMouseHook;
 
-extern std::wstring g_webuiUrl;
+extern std::vector<std::wstring> g_webuiUrls;
 extern std::string  g_updateUrl;
 
 // Args
@@ -123,6 +123,7 @@ extern ULONG_PTR  g_gdiplusToken;
 
 // App Ready and Event Queue
 #define WM_NOTIFY_FLUSH (WM_USER + 101)
+#define WM_REACHABILITY_DONE (WM_USER + 200)
 extern std::vector<nlohmann::json> g_outboundMessages;
 extern std::wstring g_launchProtocol;
 extern std::atomic<bool> g_isAppReady;

@@ -351,6 +351,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
+    case WM_REACHABILITY_DONE: {
+        // wParam is a pointer to a std::wstring we allocated in the thread
+        std::wstring* pUrl = reinterpret_cast<std::wstring*>(wParam);
+        if(pUrl)
+        {
+            if (!pUrl->empty() && g_webview)
+            {
+                std::wcout << L"[WEBVIEW]: Navigating to " << *pUrl << std::endl;
+                g_webview->Navigate(pUrl->c_str());
+            }
+            else
+            {
+                MessageBoxW(nullptr,
+                            L"All endpoints are unreachable",
+                            L"WebView2 Initialization Error",
+                            MB_ICONERROR | MB_OK);
+            }
+            delete pUrl;
+        }
+        break;
+    }
     case WM_SETTINGCHANGE:
     {
         UpdateTheme(hWnd);

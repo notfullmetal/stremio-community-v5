@@ -1,5 +1,6 @@
 #include "helpers.h"
 #include <tlhelp32.h>
+#include <winhttp.h>
 #include "../core/globals.h"
 
 std::string WStringToUtf8(const std::wstring &wstr)
@@ -116,4 +117,76 @@ bool isSubtitle(const std::wstring& filePath) {
     std::transform(lowerFilePath.begin(), lowerFilePath.end(), lowerFilePath.begin(), towlower);
     return std::any_of(g_subtitleExtensions.begin(), g_subtitleExtensions.end(),
         [&](const std::wstring& ext) { return lowerFilePath.ends_with(ext); });
+}
+
+bool IsEndpointReachable(const std::wstring& url) {
+    HINTERNET hSession = WinHttpOpen(L"Reachability Check",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
+    if (!hSession) return false;
+
+    // Set timeouts
+    WinHttpSetTimeouts(hSession, 3000, 3000, 3000, 3000);
+
+    URL_COMPONENTS urlComp = { sizeof(URL_COMPONENTS) };
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength = (DWORD)-1;
+    urlComp.dwSchemeLength = (DWORD)-1;
+
+    if (!WinHttpCrackUrl(url.c_str(), (DWORD)url.length(), 0, &urlComp)) {
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    std::wstring host(urlComp.lpszHostName, urlComp.dwHostNameLength);
+    std::wstring path(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+    INTERNET_PORT port = urlComp.nPort;
+    bool useSSL = (urlComp.nScheme == INTERNET_SCHEME_HTTPS);
+
+    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"HEAD", path.c_str(),
+        NULL, NULL, NULL, useSSL ? WINHTTP_FLAG_SECURE : 0);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    BOOL sent = WinHttpSendRequest(hRequest, NULL, 0, NULL, 0, 0, 0);
+    if (!sent) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    BOOL received = WinHttpReceiveResponse(hRequest, NULL);
+    DWORD statusCode = 0;
+    DWORD statusSize = sizeof(statusCode);
+
+    if (received) {
+        WinHttpQueryHeaders(hRequest,
+            WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+            NULL, &statusCode, &statusSize, NULL);
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+
+    return received && (statusCode >= 200 && statusCode < 300);
+}
+
+std::wstring GetFirstReachableUrl() {
+    for (const auto& url : g_webuiUrls) {
+        if (IsEndpointReachable(url)) {
+            return url;
+        }
+    }
+    // Fallback to first URL or handle error
+    return g_webuiUrls.empty() ? L"" : g_webuiUrls[0];
 }

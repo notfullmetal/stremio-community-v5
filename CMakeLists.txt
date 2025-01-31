@@ -62,6 +62,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         dwmapi.lib
         Shcore.lib
         Msimg32.lib
+        winhttp.lib
         nlohmann_json::nlohmann_json
         unofficial::webview2::webview2
         OpenSSL::SSL
