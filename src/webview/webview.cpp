@@ -296,6 +296,9 @@ static void SetupWebMessageHandler()
                 HRESULT hr = args->get_MenuItems(&items);
                 if (FAILED(hr) || !items) return hr;
 
+                #ifdef DEBUG_BUILD
+                return S_OK; //DEV TOOLS DEBUG ONLY
+                #endif
 
                 // Get current URL
                 wil::unique_cotaskmem_string currentUri;
