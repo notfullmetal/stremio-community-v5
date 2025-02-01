@@ -219,6 +219,9 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
     } else if (ev=="open-external") {
         std::wstring uri(args[0].begin(), args[0].end());
         ShellExecuteW(nullptr, L"open", uri.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+    } else if (ev=="navigate") {
+        std::wstring uri(args[0].begin(), args[0].end());
+        g_webview->Navigate(uri.c_str());
     } else {
         std::cout<<"Unknown event="<<ev<<"\n";
     }
@@ -243,9 +246,18 @@ void HandleInboundJSON(const std::string &msg)
             nlohmann::json root;
             root["id"] = 0;
             nlohmann::json transportObj;
+
+            json extData = {};
+            if (!g_extensionMap.empty()) {
+                for (auto& [name, id] : g_extensionMap) {
+                    extData[WStringToUtf8(name)] = WStringToUtf8(id);
+                }
+            }
+
             transportObj["properties"] = {
                 1,
                 nlohmann::json::array({0, "shellVersion", 0, APP_VERSION}),
+                nlohmann::json::array({0, "BrowserExtensions", 0, extData}),
             };
             transportObj["signals"] = {
                 nlohmann::json::array({0, "handleInboundJSONSignal"}),

@@ -291,36 +291,52 @@ static void SetupWebMessageHandler()
     g_webview->add_ContextMenuRequested(
         Microsoft::WRL::Callback<ICoreWebView2ContextMenuRequestedEventHandler>(
             [](ICoreWebView2* sender, ICoreWebView2ContextMenuRequestedEventArgs* args) -> HRESULT {
+                // Existing variable declarations
                 wil::com_ptr<ICoreWebView2ContextMenuItemCollection> items;
                 HRESULT hr = args->get_MenuItems(&items);
-                if (FAILED(hr) || !items) {
-                    return hr;
-                }
+                if (FAILED(hr) || !items) return hr;
 
-                #ifdef DEBUG_BUILD
-                return S_OK; //DEV TOOLS DEBUG ONLY
-                #endif
+
+                // Get current URL
+                wil::unique_cotaskmem_string currentUri;
+                sender->get_Source(&currentUri);
+                std::wstring uri(currentUri.get());
+                bool isExtensionUrl = uri.starts_with(L"chrome-extension://");
+
+                // Get context menu target
                 wil::com_ptr<ICoreWebView2ContextMenuTarget> target;
                 hr = args->get_ContextMenuTarget(&target);
                 BOOL isEditable = FALSE;
                 if (SUCCEEDED(hr) && target) {
-                    hr = target->get_IsEditable(&isEditable);
-                }
-                if (FAILED(hr)) {
-                    return hr;
+                    target->get_IsEditable(&isEditable);
                 }
 
                 UINT count = 0;
                 items->get_Count(&count);
 
                 if (!isEditable) {
-                    while(count > 0) {
+                    // Allow only Back command (ID 33000) for extension URLs
+                    std::set<INT32> allowedCommands = isExtensionUrl ?
+                        std::set<INT32>{33000} :
+                        std::set<INT32>{};
+
+                    for (UINT i = 0; i < count;) {
                         wil::com_ptr<ICoreWebView2ContextMenuItem> item;
-                        items->GetValueAtIndex(0, &item);
-                        if(item) {
-                            items->RemoveValueAtIndex(0);
+                        hr = items->GetValueAtIndex(i, &item);
+                        if (FAILED(hr)) {
+                            i++;
+                            continue;
                         }
-                        items->get_Count(&count);
+
+                        INT32 commandId;
+                        item->get_CommandId(&commandId);
+
+                        if (allowedCommands.find(commandId) == allowedCommands.end()) {
+                            items->RemoveValueAtIndex(i);
+                            items->get_Count(&count);
+                        } else {
+                            i++;
+                        }
                     }
                     return S_OK;
                 }
@@ -334,38 +350,26 @@ static void SetupWebMessageHandler()
                     50156  // Select all
                 };
 
-                for (UINT i = 0; i < count; )
-                {
+                for (UINT i = 0; i < count;) {
                     wil::com_ptr<ICoreWebView2ContextMenuItem> item;
                     hr = items->GetValueAtIndex(i, &item);
-                    if (FAILED(hr) || !item) {
-                        ++i;
-                        continue;
-                    }
-
-                    INT32 commandId = 0;
-                    hr = item->get_CommandId(&commandId);
                     if (FAILED(hr)) {
-                        ++i;
+                        i++;
                         continue;
                     }
 
-                    // If the commandId is not in the allowed list, remove the item
+                    INT32 commandId;
+                    item->get_CommandId(&commandId);
+
                     if (allowedCommandIds.find(commandId) == allowedCommandIds.end()) {
-                        hr = items->RemoveValueAtIndex(i);
-                        if (FAILED(hr)) {
-                            std::wcerr << L"Failed to remove item at index " << i << std::endl;
-                            return hr;
-                        }
-                        // After removal, the collection size reduces, so update count and don't increment i
+                        items->RemoveValueAtIndex(i);
                         items->get_Count(&count);
-                        continue;
+                    } else {
+                        i++;
                     }
-                    ++i;
                 }
                 return S_OK;
-            }
-        ).Get(),
+            }).Get(),
         &contextMenuToken
     );
 
@@ -459,13 +463,24 @@ static void SetupExtensions()
     try {
         for(const auto& entry : std::filesystem::directory_iterator(extensionsRoot)) {
             if(entry.is_directory()) {
+                std::wstring folderName = entry.path().filename().wstring();
                 HRESULT hr = g_webviewProfile->AddBrowserExtension(
                     entry.path().wstring().c_str(),
                     Microsoft::WRL::Callback<ICoreWebView2ProfileAddBrowserExtensionCompletedHandler>(
-                    [extPath=entry.path().wstring()](HRESULT result, ICoreWebView2BrowserExtension* extension)->HRESULT
+                    [folderName](HRESULT result, ICoreWebView2BrowserExtension* extension)->HRESULT
                     {
-                        if(SUCCEEDED(result)) {
-                            std::wcout<<L"[EXTENSIONS]: Added extension "<<extPath<<std::endl;
+                        if (SUCCEEDED(result) && extension)
+                        {
+                            wil::unique_cotaskmem_string extId;
+                            HRESULT hrId = extension->get_Id(&extId);
+                            if (SUCCEEDED(hrId) && extId)
+                            {
+                                // Store extension ID in the global map
+                                g_extensionMap[folderName] = extId.get();
+                                std::wcout << L"[EXTENSIONS]: " << folderName
+                                           << L" => " << extId.get() << std::endl;
+                            }
+                            std::wcout << L"[EXTENSIONS]: Added extension " << folderName << std::endl;
                         } else {
                             std::wstring err = L"[EXTENSIONS]: Failed to add extension => " + std::to_wstring(result);
                             AppendToCrashLog(err);

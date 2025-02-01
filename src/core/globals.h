@@ -129,6 +129,9 @@ extern std::wstring g_launchProtocol;
 extern std::atomic<bool> g_isAppReady;
 extern std::atomic<bool> g_waitStarted;
 
+// Extensions
+extern std::map<std::wstring, std::wstring> g_extensionMap;
+
 // Updater
 extern std::atomic_bool       g_updaterRunning;
 extern std::filesystem::path  g_installerPath;

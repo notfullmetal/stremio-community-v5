@@ -83,6 +83,9 @@ std::wstring g_launchProtocol;
 std::atomic<bool>  g_isAppReady   = false;
 std::atomic<bool>  g_waitStarted(false);
 
+// Extensions
+std::map<std::wstring, std::wstring> g_extensionMap;
+
 // Updater
 std::atomic_bool       g_updaterRunning = false;
 std::filesystem::path  g_installerPath;
