@@ -1,6 +1,7 @@
 {
   "ublock": {
     "name": "uBlock Origin",
+    "extension_name": "ublock",
     "logo": "https://lh3.googleusercontent.com/rrgyVBVte7CfjjeTU-rCHDKba7vtq-yn3o8-10p5b6QOj_2VCDAO3VdggV5fUnugbG2eDGPPjoJ9rsiU_tUZBExgLGc=s60",
     "description": "uBlock Origin is not just an “ad blocker“, it's a wide-spectrum content blocker with CPU and memory efficiency as a primary feature.",
     "types": ["Browser Extension", "other"],
@@ -14,6 +15,7 @@
   },
   "premid": {
     "name": "PreMiD",
+    "extension_name": "premid",
     "logo": "https://premid.app/_ipx/loading_lazy,f_webp,s_450x150/images/logo-wordmark-blue.png",
     "description": "PreMiD is a simple, configurable utility that allows you to show what you're doing on the web in your Discord now playing status / Discord Rich Presence ",
     "types": ["Browser Extension", "other"],
