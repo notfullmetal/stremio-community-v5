@@ -42,7 +42,10 @@ extern HANDLE    g_hMutex;
 extern HHOOK     g_hMouseHook;
 
 extern std::vector<std::wstring> g_webuiUrls;
+extern std::vector<std::wstring> g_domainWhitelist;
 extern std::string  g_updateUrl;
+extern std::wstring  g_extensionsDetailsUrl;
+extern std::wstring  g_webuiUrl;
 
 // Args
 extern bool g_streamingServer;
@@ -131,6 +134,7 @@ extern std::atomic<bool> g_waitStarted;
 
 // Extensions
 extern std::map<std::wstring, std::wstring> g_extensionMap;
+extern std::vector<std::wstring> g_scriptQueue;
 
 // Updater
 extern std::atomic_bool       g_updaterRunning;

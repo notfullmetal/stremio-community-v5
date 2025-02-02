@@ -221,7 +221,11 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
         ShellExecuteW(nullptr, L"open", uri.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     } else if (ev=="navigate") {
         std::wstring uri(args[0].begin(), args[0].end());
-        g_webview->Navigate(uri.c_str());
+        if (args[0] == "home") {
+            g_webview->Navigate(g_webuiUrl.c_str());
+        } else {
+            g_webview->Navigate(uri.c_str());
+        }
     } else {
         std::cout<<"Unknown event="<<ev<<"\n";
     }

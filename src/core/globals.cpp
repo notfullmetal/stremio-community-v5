@@ -15,7 +15,10 @@ std::vector<std::wstring> g_webuiUrls = {
     L"https://zaarrg.github.io/stremio-web-shell-fixes/",
     L"https://web.stremio.com/"
 };
+std::vector<std::wstring> g_domainWhitelist;
 std::string  g_updateUrl= "https://raw.githubusercontent.com/Zaarrg/stremio-desktop-v5/refs/heads/webview-windows/version/version.json";
+std::wstring  g_extensionsDetailsUrl= L"https://raw.githubusercontent.com/Zaarrg/stremio-desktop-v5/refs/heads/webview-windows/extensions/extensions.json";
+std::wstring  g_webuiUrl;
 
 // Command-line args
 bool g_streamingServer      = true;
@@ -85,6 +88,7 @@ std::atomic<bool>  g_waitStarted(false);
 
 // Extensions
 std::map<std::wstring, std::wstring> g_extensionMap;
+std::vector<std::wstring> g_scriptQueue;
 
 // Updater
 std::atomic_bool       g_updaterRunning = false;

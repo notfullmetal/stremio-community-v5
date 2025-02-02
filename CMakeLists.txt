@@ -52,6 +52,8 @@ set(SOURCES
         src/ui/mainwindow.h
         src/ui/mainwindow.cpp
         src/resource.h
+        src/utils/extensions.cpp
+        src/utils/extensions.h
 )
 
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
@@ -63,6 +65,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         Shcore.lib
         Msimg32.lib
         winhttp.lib
+        shlwapi.lib
         nlohmann_json::nlohmann_json
         unofficial::webview2::webview2
         OpenSSL::SSL

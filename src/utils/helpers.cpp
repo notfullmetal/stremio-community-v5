@@ -1,4 +1,6 @@
 #include "helpers.h"
+
+#include <iostream>
 #include <tlhelp32.h>
 #include <winhttp.h>
 #include "../core/globals.h"
@@ -189,4 +191,97 @@ std::wstring GetFirstReachableUrl() {
     }
     // Fallback to first URL or handle error
     return g_webuiUrls.empty() ? L"" : g_webuiUrls[0];
+}
+
+bool URLContainsAny(const std::wstring& url) {
+    if (std::find(g_domainWhitelist.begin(), g_domainWhitelist.end(), g_webuiUrl) == g_domainWhitelist.end()) {
+        g_domainWhitelist.push_back(g_webuiUrl);
+    }
+    return std::any_of(g_domainWhitelist.begin(), g_domainWhitelist.end(), [&](const std::wstring& sub) {
+        return url.find(sub) != std::wstring::npos;
+    });
+}
+
+bool FetchAndParseWhitelist() {
+    HINTERNET hSession = WinHttpOpen(L"DomainWhitelist Updater",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
+    if (!hSession) return false;
+
+    WinHttpSetTimeouts(hSession, 3000, 3000, 3000, 3000);
+
+    URL_COMPONENTS urlComp = { sizeof(URL_COMPONENTS) };
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength = (DWORD)-1;
+    urlComp.dwSchemeLength = (DWORD)-1;
+
+    if (!WinHttpCrackUrl(g_extensionsDetailsUrl.c_str(), (DWORD)g_extensionsDetailsUrl.length(), 0, &urlComp)) {
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    std::wstring host(urlComp.lpszHostName, urlComp.dwHostNameLength);
+    std::wstring path(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+    INTERNET_PORT port = urlComp.nPort;
+    bool useSSL = (urlComp.nScheme == INTERNET_SCHEME_HTTPS);
+
+    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", path.c_str(),
+        NULL, NULL, NULL, useSSL ? WINHTTP_FLAG_SECURE : 0);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    if (!WinHttpSendRequest(hRequest, NULL, 0, NULL, 0, 0, 0)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    if (!WinHttpReceiveResponse(hRequest, NULL)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return false;
+    }
+
+    std::string response;
+    DWORD bytesRead = 0;
+    do {
+        char buffer[4096];
+        if (!WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytesRead)) {
+            break;
+        }
+        if (bytesRead > 0) {
+            response.append(buffer, bytesRead);
+        }
+    } while (bytesRead > 0);
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+
+    try {
+        json j = json::parse(response);
+        if (j.contains("domains") && j["domains"].is_array()) {
+            g_domainWhitelist.clear();
+            for (const auto& domain : j["domains"]) {
+                if (domain.is_string()) {
+                    g_domainWhitelist.push_back(Utf8ToWstring(domain.get<std::string>()));
+                }
+            }
+            return true;
+        }
+    } catch (...) {
+        std::wcout << L"[HELPER]: Failed json parsing of domain whitelist for extensions..." << std::endl;
+    }
+
+    return false;
 }

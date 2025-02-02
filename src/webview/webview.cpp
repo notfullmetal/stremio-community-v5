@@ -2,6 +2,7 @@
 #include <string>
 #include <thread>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <Shlwapi.h>
 #include <wrl.h>
@@ -9,6 +10,7 @@
 #include "../utils/crashlog.h"
 #include "../utils/helpers.h"
 #include "../ui/mainwindow.h"
+#include "../utils/extensions.h"
 
 static const wchar_t* EXEC_SHELL_SCRIPT = LR"JS_CODE(
 try {
@@ -83,6 +85,78 @@ static const wchar_t* INJECTED_KEYDOWN_SCRIPT = LR"JS(
             window.chrome.webview.postMessage(JSON.stringify(msg));
         }
     });
+})();
+)JS";
+
+static const wchar_t* INJECTED_BUTTON_SCRIPT = LR"JS(
+(function() {
+  // Create the button element
+  var btn = document.createElement('button');
+  btn.id = 'goBackStremioBtn';
+
+  // Style the button:
+  btn.style.position = 'fixed';
+  btn.style.bottom = '15px';
+  btn.style.right = '15px';
+  btn.style.zIndex = '9999';
+  btn.style.backgroundColor = '#121024'; // Purple
+  btn.style.color = 'white';
+  btn.style.border = 'none';
+  btn.style.borderRadius = '30px';
+  btn.style.padding = '12px 20px';
+  btn.style.fontSize = '16px';
+  btn.style.fontWeight = 'bold';
+  btn.style.display = 'flex';
+  btn.style.alignItems = 'center';
+  btn.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+  btn.style.cursor = 'pointer';
+  btn.style.transition = 'background-color 0.3s ease';
+
+  // Hover effect:
+  btn.addEventListener('mouseenter', function() {
+    btn.style.backgroundColor = '#211e39'; // Gray
+  });
+  btn.addEventListener('mouseleave', function() {
+    btn.style.backgroundColor = '#121024';
+  });
+
+  // Create an image element for the logo
+  var img = document.createElement('img');
+  img.src = 'https://stremio.zarg.me/images/stremio_symbol.png';
+  img.alt = 'Logo';
+  img.style.height = '24px';
+  img.style.width = '24px';
+  img.style.marginRight = '8px';
+
+img.addEventListener('error', function() {
+  img.style.display = 'none';
+});
+
+  // Create a text element
+  var txt = document.createElement('span');
+  txt.textContent = 'Back to Stremio';
+
+  // Append the logo and text to the button
+  btn.appendChild(img);
+  btn.appendChild(txt);
+
+  // On click go home
+  btn.addEventListener('click', function() {
+            const payload = {
+              type: 6,
+              object: "transport",
+              method: "handleInboundJSON",
+              id: 666,
+              args: [
+                "navigate",
+                [ "home" ]
+              ]
+            };
+          window.chrome.webview.postMessage(JSON.stringify(payload));
+  });
+
+  // Append the button to the document body
+  document.body.appendChild(btn);
 })();
 )JS";
 
@@ -222,7 +296,9 @@ void InitWebView2(HWND hWnd)
                         std::wcout << L"[WEBVIEW]: Checking web ui endpoints..." << std::endl;
                         std::wstring foundUrl = GetFirstReachableUrl();
                         std::wstring* pResult = new std::wstring(foundUrl);
+                        g_webuiUrl = foundUrl;
                         PostMessage(g_hWnd, WM_REACHABILITY_DONE, (WPARAM)pResult, 0);
+                        FetchAndParseWhitelist();
                     }).detach();
                     return S_OK;
                 }).Get()
@@ -250,14 +326,34 @@ static void SetupWebMessageHandler()
         {
             BOOL isSuccess;
             args->get_IsSuccess(&isSuccess);
+
+            // Retrieve the final URL
+            wil::unique_cotaskmem_string rawUri;
+            sender->get_Source(&rawUri);
+            std::wstring finalUri = rawUri ? rawUri.get() : L"";
+            std::wcout << L"[WEBVIEW]: Navigation try to " << finalUri << std::endl;
+
+            // Add back to stremio button if not on stremio
+            if (finalUri.find(g_webuiUrl) == std::wstring::npos) {
+                sender->ExecuteScript(INJECTED_BUTTON_SCRIPT, nullptr);
+            }
+
             if(isSuccess) {
                 std::cout<<"[WEBVIEW]: Navigation Complete - Success\n";
                 sender->ExecuteScript(EXEC_SHELL_SCRIPT, nullptr);
+                // Flush the script queue.
+                if (!g_scriptQueue.empty()) {
+                    for (const auto &script : g_scriptQueue) {
+                        sender->ExecuteScript(script.c_str(), nullptr);
+                    }
+                    g_scriptQueue.clear();
+                }
             } else {
                 std::cout<<"[WEBVIEW]: Navigation failed\n";
                 if(g_hSplash && !g_waitStarted.exchange(true)) {
                     WaitAndRefreshIfNeeded();
                 }
+                HandlePremidLogin(finalUri);
             }
             return S_OK;
         }).Get(),
@@ -422,6 +518,10 @@ static void SetupWebMessageHandler()
                         SendToJS("FileDropped", j);
                         return S_OK;
                     }
+                    if (URLContainsAny(wuri)) {
+                        g_webview->Navigate(wuri.c_str());
+                        return S_OK;
+                    }
                     // For non-file URIs, open externally
                     ShellExecuteW(nullptr, L"open", uri.get(), nullptr, nullptr, SW_SHOWNORMAL);
                 }
@@ -429,6 +529,26 @@ static void SetupWebMessageHandler()
             }
         ).Get(),
         &newWindowToken
+    );
+
+    // For redirects like window.location.replace
+    EventRegistrationToken navstartedToken;
+    g_webview->add_NavigationStarting(
+        Microsoft::WRL::Callback<ICoreWebView2NavigationStartingEventHandler>(
+            [](ICoreWebView2* sender, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT
+            {
+                wil::unique_cotaskmem_string uri;
+                args->get_Uri(&uri);
+                std::wstring destination(uri.get());
+
+                if (!URLContainsAny(destination)) {
+                    args->put_Cancel(TRUE);
+                    ShellExecuteW(nullptr, L"open", uri.get(), nullptr, nullptr, SW_SHOWNORMAL);
+                }
+                return S_OK;
+            }
+        ).Get(),
+        &navstartedToken
     );
 
     // FullScreen
