@@ -26,5 +26,11 @@
       "p2p": false
     },
     "page": "popup.html"
-  }
+  },
+  "domains": [
+    "https://discord.com",
+    "https://premid.app",
+    "https://login.premid.app",
+    "chrome-extension://"
+  ]
 }
