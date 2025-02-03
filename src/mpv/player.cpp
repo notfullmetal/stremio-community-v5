@@ -179,31 +179,37 @@ void HandleMpvEvents()
 
 void HandleMpvCommand(const std::vector<std::string>& args)
 {
-    if(!g_mpv || args.empty()) return;
-    std::vector<const char*> cargs;
-    for(auto &s: args) {
-        cargs.push_back(s.c_str());
-    }
-    cargs.push_back(nullptr);
-    mpv_command(g_mpv, cargs.data());
+    std::thread([args](){
+        if(!g_mpv || args.empty()) return;
+        std::vector<const char*> cargs;
+        for(auto &s: args) {
+            cargs.push_back(s.c_str());
+        }
+        cargs.push_back(nullptr);
+        mpv_command(g_mpv, cargs.data());
+    }).detach();
 }
 
 void HandleMpvSetProp(const std::vector<std::string>& args)
 {
-    if(!g_mpv || args.size()<2) return;
-    std::string val=args[1];
-    if(val=="true")  val="yes";
-    if(val=="false") val="no";
-    mpv_set_property_string(g_mpv, args[0].c_str(), val.c_str());
+    std::thread([args](){
+        if(!g_mpv || args.size()<2) return;
+        std::string val=args[1];
+        if(val=="true")  val="yes";
+        if(val=="false") val="no";
+        mpv_set_property_string(g_mpv, args[0].c_str(), val.c_str());
+    }).detach();
 }
 
 void HandleMpvObserveProp(const std::vector<std::string>& args)
 {
-    if(!g_mpv || args.empty()) return;
-    std::string pname=args[0];
-    g_observedProps.insert(pname);
-    mpv_observe_property(g_mpv,0,pname.c_str(),MPV_FORMAT_NODE);
-    std::cout<<"Observing prop="<<pname<<"\n";
+    std::thread([args](){
+        if(!g_mpv || args.empty()) return;
+        std::string pname=args[0];
+        g_observedProps.insert(pname);
+        mpv_observe_property(g_mpv,0,pname.c_str(),MPV_FORMAT_NODE);
+        std::cout<<"Observing prop="<<pname<<"\n";
+    }).detach();
 }
 
 void pauseMPV(bool allowed)
