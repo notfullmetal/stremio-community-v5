@@ -10,6 +10,8 @@
 #include <gdiplus.h>
 #include <sstream>
 
+#include "config.h"
+
 static std::wstring GetDailyCrashLogPath()
 {
     std::time_t t = std::time(nullptr);
@@ -49,6 +51,8 @@ void AppendToCrashLog(const std::string& message)
 
 void Cleanup()
 {
+    //Save Settings
+    SaveSettings();
     // Shut down mpv
     CleanupMPV();
     // Shut down Node

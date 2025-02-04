@@ -53,6 +53,7 @@ void SaveSettings()
     WritePrivateProfileStringW(L"General", L"PauseOnMinimize", pauseMinVal, iniPath.c_str());
     WritePrivateProfileStringW(L"General", L"PauseOnLostFocus", pauseFocVal, iniPath.c_str());
     WritePrivateProfileStringW(L"General", L"AllowZoom", allowZoomVal, iniPath.c_str());
+    WriteIntToIni(L"MPV", L"InitialVolume", g_currentVolume, iniPath);
 }
 
 static void WriteIntToIni(const std::wstring &section, const std::wstring &key, int value, const std::wstring &iniPath)
