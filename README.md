@@ -212,6 +212,7 @@ Enhance your Stremio experience by customizing the MPV player settings. Below ar
     - The ``mpv.conf`` file can be found in the following location:
         - **Installation Path:** ``%localAppData%\Programs\LNV\Stremio-5\portable_config\mpv.conf``
         - **Shaders Folder:** Located within the installation directory ``..\Stremio-5\portable_config\shaders``.
+        - **Latest Portable Config:** Latest portable config can be found [here](https://github.com/Zaarrg/stremio-desktop-v5/tree/webview-windows/utils/mpv/anime4k/portable_config).
 
 - **🎹 Usage example of `mpv.conf` for DV Content:**
   ```shell
@@ -236,6 +237,29 @@ Enhance your Stremio experience by customizing the MPV player settings. Below ar
   CTRL+0 no-osd change-list glsl-shaders clr ""; show-text "GLSL shaders cleared"
   ```
 > **⏳ Note:** Some keys might not work as key presses are converted from js event.codes to literal values for mpv
+
+- **🔡 Subtitle Customization:**
+  - Subtitles can be full customized in the ``mpv.conf`` by adding the following:
+      ```shell
+      # Adjust as needed - 
+        sub-font="Comic Sans MS"
+        osd-font="Comic Sans MS"
+        osd-font-size=43
+        sub-font-size=43
+        sub-color=#e1fe00
+        sub-font-size=43
+        sub-color=#ffffff
+        sub-font-size=43
+        sub-border-color=#000000
+        sub-border-size=2
+        sub-shadow-offset=1
+        sub-shadow-color=#000000
+        sub-spacing=0
+        sub-margin-y=41
+        sub-line-spacing=0
+        ass-line-spacing=0
+        # To overwrite .ass subs use sub-ass=no or just use F2 to cycle subtitle modification levels
+      ```
 
 ## ⚙️ **Start Arguments**
 Use these extra arguments when launching the application:
