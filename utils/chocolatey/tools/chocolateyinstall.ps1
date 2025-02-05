@@ -11,12 +11,12 @@ $packageArgs = @{
 
 
 if ([Environment]::Is64BitOperatingSystem) {
-    $packageArgs['url']          = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.15/Stremio.5.0.15-x64.exe'
-    $packageArgs['checksum']     = '2ae3e585b34d2f0c54e8290c27d48a291e7c2c54ea2c95f1d0c2a4652b970c00'
+    $packageArgs['url']          = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.16/Stremio.5.0.16-x64.exe'
+    $packageArgs['checksum']     = '2b60d91e07b0a1c9d174e5a3e66fc040b5e648cb60a5ea28ecac95895ed16fcf'
     $packageArgs['checksumType'] = 'sha256'
 } else {
-    $packageArgs['url']          = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.15/Stremio.5.0.15-x86.exe'
-    $packageArgs['checksum']     = '5cb7ca75d694d1c13d8a6ce2bc38f4a4f3c9121b50f5462cea8878d875512964'
+    $packageArgs['url']          = 'https://github.com/Zaarrg/stremio-desktop-v5/releases/download/5.0.0-beta.16/Stremio.5.0.16-x86.exe'
+    $packageArgs['checksum']     = 'a5809e560ce0a291c9727b02be1b2fd7fb0e5d85463b01f96edb5fe0294010a8'
     $packageArgs['checksumType'] = 'sha256'
 }
 
