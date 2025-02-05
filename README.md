@@ -42,6 +42,9 @@
   <li>🌑 <strong>Dark Mode</strong>: Windows Dark mode support</li>
   <li>🖼️ <strong>Thumbnail Preview</strong>: ThumbFast support to allow for preview thumbnails when seeking</li>
   <li>📁 <strong>Local File Playback</strong>: Play any file MPV and ffmpeg supports, just use <strong>open with</strong> 'stremio' or <strong>drag and drop</strong></li>
+  <li>🔡 <strong>Local Subtitles</strong>: Add any Subtitle file using drag and drop while playing a video</li>
+  <li>🎨 <strong>Advanced Subtitles Styles</strong>: Style subtitles any way you like using <strong>mpv configuration</strong></li>
+  <li>📌 <strong>Advanced Auto Selection</strong>: Select multiple default Subtitle, Audio tracks as well as Subtitle Keywords to prioritize and filter out unwanted languages</li>
   <li>🌀 <strong>Torrent Support</strong>: Play any local .torrent file or any magnet: link</li>
   <li>📺 <strong>Chromecast Support</strong>: Cast Videos to your Chromecast</li>
   <li>➕ <strong>Easy Addon Install</strong>: Just use the install Button like stremio v4, no need to copy paste urls</li>
