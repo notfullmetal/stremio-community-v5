@@ -253,6 +253,20 @@ Enhance your Stremio experience by customizing the MPV player settings. Below ar
         ass-line-spacing=0
         # To overwrite .ass subs use sub-ass=no or just use F2 to cycle subtitle modification levels
       ```
+  - Stremio by default overwrites the following:
+      ```shell
+          # These 3 options are set using the web ui under the settings page
+          'subtitlesTextColor': 'sub-color',
+          'subtitlesBackgroundColor': 'sub-back-color',
+          'subtitlesOutlineColor': 'sub-border-color',
+    
+          # Affected mpv sub settings by this are:
+          sub-color
+          sub-back-color  # + Alias sub-shadow-color
+          sub-border-color # + Alias sub-outline-color
+    
+          # All these need to be set via the web ui instead
+      ```
 
 ## ⚙️ **Start Arguments**
 Use these extra arguments when launching the application:
