@@ -468,6 +468,86 @@ done:
     ; --- End custom override logic ---
 FunctionEnd
 
+Var TIMESTAMP
+Var day
+Var month
+Var year
+Var day_name
+Var hours
+Var minutes
+Var seconds
+
+Function GetTimestamp
+    ; Get local time.
+    ${GetTime} "" "L" $day $month $year $day_name $hours $minutes $seconds
+
+    ; Construct the timestamp string.
+    ; Example: if day="01", month="04", year="2025", hours="16", minutes="05", seconds="50",
+    ; the resulting string will be: "20250401_160550"
+    StrCpy $TIMESTAMP "$year$month$day_$hours$minutes$seconds"
+FunctionEnd
+
+;------------------------------------------------------------
+; The RemoveAll function now performs a backup of portable_config using a timestamp.
+Function RemoveAll
+    ; Check if portable_config exists; if so, back it up.
+    IfFileExists "$INSTDIR\portable_config\*.*" 0 skip_backup
+        ; Get the current timestamp (sets the global variable $TIMESTAMP)
+        Call GetTimestamp
+        ; Rename portable_config to portable_config_backup_<TIMESTAMP>
+        Rename "$INSTDIR\portable_config" "$INSTDIR\portable_config_backup_$TIMESTAMP"
+    skip_backup:
+
+    ; Prepare registers for deletion loop
+    Push $R2
+    Push $R3
+    Push $R4
+    Push $R5
+
+    ClearErrors
+    FindFirst $R3 $R2 "$INSTDIR\*.*"
+    IfErrors removeAllDone
+
+loop:
+    ; Skip special directories "." and ".."
+    StrCmp $R2 "." next
+    StrCmp $R2 ".." next
+
+    ; Check if this item’s name begins with our backup folder prefix.
+    ; Copy the first 23 characters ("portable_config_backup_") into $R5.
+    StrCpy $R5 $R2 23
+    StrCmp $R5 "portable_config_backup_" 0 notBackup
+        ; If equal, skip deletion for this folder.
+        Goto next
+notBackup:
+    ; Build the full path of this item.
+    StrCpy $R4 "$INSTDIR\$R2"
+
+    ; Check whether it's a file or a directory.
+    IfFileExists "$R4\*.*" isDir notDir
+
+notDir:
+    Delete "$R4"
+    Goto next
+
+isDir:
+    RMDir /r "$R4"
+
+next:
+    ClearErrors
+    FindNext $R3 $R2
+    IfErrors removeAllDone
+    Goto loop
+
+removeAllDone:
+    FindClose $R3
+
+    Pop $R5
+    Pop $R4
+    Pop $R3
+    Pop $R2
+FunctionEnd
+
 Section ; App Files
     !insertmacro checkIfAppIsRunning "$(appIsRunningInstallError)"
 
@@ -476,7 +556,15 @@ Section ; App Files
 
     ; Hide details
     SetDetailsPrint None
-    Call RemoveAllExceptWebView2
+
+    ; *** Prompt the user whether to delete all user data ***
+    IfSilent +3
+      MessageBox MB_YESNO|MB_ICONQUESTION "Delete all User Data? This update requires a clean install for the best experience. A backup of your portable_config folder will be created if it has been modified. Continue?" IDNO SkipDataDeletion
+      Call RemoveAll
+      Goto DataDeletionDone
+    SkipDataDeletion:
+      Call RemoveAllExceptWebView2
+    DataDeletionDone:
 
     ;Set output path to InstallDir
     SetOutPath "$INSTDIR"
