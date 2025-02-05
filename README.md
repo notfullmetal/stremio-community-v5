@@ -66,16 +66,6 @@
 - A side-by-side visual comparison of various features and enhancements in Stremio Desktop v5. Due to this being screenshots, HDR appears over-exposed.
 
 <p align="center">
-  <strong>HDR Comparison</strong>
-</p>
-<p align="center">
-  <img src="https://i.imgur.com/ezh2YIa.png" alt="Stremio Web Desktop Screenshot" width="600" />
-</p>
-<p align="center">
-  <small><i>Stremio Desktop v5 vs Official Stremio v5.</i></small>
-</p>
-
-<p align="center">
   <strong>Upscaler Comparison</strong>
 </p>
 <p align="center">
