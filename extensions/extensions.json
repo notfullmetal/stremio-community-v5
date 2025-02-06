@@ -27,6 +27,20 @@
     },
     "page": "popup.html"
   },
+  "fallback": {
+    "name": "",
+    "extension_name": "",
+    "logo": "",
+    "description": "No description available.",
+    "types": ["Browser Extension", "other"],
+    "behaviorHints": {
+      "configurable": true,
+      "configurationRequired": false,
+      "adult": false,
+      "p2p": false
+    },
+    "page": ""
+  },
   "domains": [
     "https://discord.com",
     "https://premid.app",
