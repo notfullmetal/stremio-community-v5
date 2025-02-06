@@ -31,7 +31,7 @@
     "name": "",
     "extension_name": "",
     "logo": "",
-    "description": "No description available.",
+    "description": "No description available. Create a GitHub issue to get this extension supported.",
     "types": ["Browser Extension", "other"],
     "behaviorHints": {
       "configurable": true,
