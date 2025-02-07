@@ -169,11 +169,12 @@
     - Add any Browser Extension to Stremio by dropping the ``unpacked`` Extension into ``portable_config/extensions``
     - On Start Extensions from ``portable_config/extensions`` are loaded.
     - 👉 **To install extension:**
-        1. Get the ``unpacked`` Extensions from``%localAppData%\Microsoft\Edge SxS\User Data\Default\Extensions``.
+        1. Get the ``unpacked`` Extensions from``%localAppData%\Microsoft\Edge\User Data\Default\Extensions``.
         2. Here look for the `mainfest.json` for example ublock `{string-id}/1.62.0_0/manifest.json` as all the content beside is the extension
         3. Now we can copy the contents of ``{string-id}/1.62.0_0`` to ``%localAppData%\Programs\LNV\Stremio-5\portable_config\extensions\ublock``
         4. Important is that the ``mainfest.json`` is located directly in ``portable_config\extensions\ublock``
         5. **Done**. Restart app and addons will be loaded. If loading fails check ``portable_config\errors-{date}.txt``
+    - **Supported Extensions**: Some extension need support added manually. These extension can be downloaded [here](https://github.com/Zaarrg/stremio-desktop-v5/tree/webview-windows/extensions).
 
 - ⚙️ **App Settings**
     - **All App Settings** can be adjusted with ``portable_config\stremio-settings.ini``
@@ -205,7 +206,7 @@ Enhance your Stremio experience by customizing the MPV player settings. Below ar
     - The ``mpv.conf`` file can be found in the following location:
         - **Installation Path:** ``%localAppData%\Programs\LNV\Stremio-5\portable_config\mpv.conf``
         - **Shaders Folder:** Located within the installation directory ``..\Stremio-5\portable_config\shaders``.
-        - **Latest Portable Config:** Latest portable config can be found [here](https://github.com/Zaarrg/stremio-desktop-v5/tree/webview-windows/utils/mpv/anime4k/portable_config).
+        - **Latest Portable Config:** Latest portable config can be found [here](https://raw.githubusercontent.com/Zaarrg/stremio-desktop-v5/webview-windows/utils/mpv/Default%20Portable%20Config.7z).
 
 - **🎹 Usage example of `mpv.conf` for DV Content:**
   ```shell

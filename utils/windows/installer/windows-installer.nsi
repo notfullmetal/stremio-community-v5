@@ -487,17 +487,17 @@ Function GetTimestamp
     StrCpy $TIMESTAMP "$year$month$day_$hours$minutes$seconds"
 FunctionEnd
 
-;------------------------------------------------------------
-; The RemoveAll function now performs a backup of portable_config using a timestamp.
-Function RemoveAll
+Function BackupPortableConfig
     ; Check if portable_config exists; if so, back it up.
-    IfFileExists "$INSTDIR\portable_config\*.*" 0 skip_backup
+    IfFileExists "$INSTDIR\portable_config\*.*" 0 backup_done
         ; Get the current timestamp (sets the global variable $TIMESTAMP)
         Call GetTimestamp
         ; Rename portable_config to portable_config_backup_<TIMESTAMP>
         Rename "$INSTDIR\portable_config" "$INSTDIR\portable_config_backup_$TIMESTAMP"
-    skip_backup:
+    backup_done:
+FunctionEnd
 
+Function RemoveAll
     ; Prepare registers for deletion loop
     Push $R2
     Push $R3
@@ -559,8 +559,9 @@ Section ; App Files
 
     ; *** Prompt the user whether to delete all user data ***
     IfSilent +3
-      MessageBox MB_YESNO|MB_ICONQUESTION "Delete all User Data? This update requires a clean install for the best experience. A backup of your portable_config folder will be created if it has been modified. Continue?" IDNO SkipDataDeletion
-      Call RemoveAll
+      MessageBox MB_YESNO|MB_ICONQUESTION "Install latest portable configuration? A backup of your portable_config folder will be created if it has been modified. Continue?" IDNO SkipDataDeletion
+      Call BackupPortableConfig
+      Call RemoveAllExceptWebView2
       Goto DataDeletionDone
     SkipDataDeletion:
       Call RemoveAllExceptWebView2
