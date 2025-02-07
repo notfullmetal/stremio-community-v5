@@ -353,7 +353,7 @@ static void SetupWebMessageHandler()
                 if(g_hSplash && !g_waitStarted.exchange(true)) {
                     WaitAndRefreshIfNeeded();
                 }
-                HandlePremidLogin(finalUri);
+                HandleExtensions(finalUri);
             }
             return S_OK;
         }).Get(),
@@ -506,9 +506,9 @@ static void SetupWebMessageHandler()
                     {
                         std::wstring filePath = wuri.substr(8);
                         std::string utf8FilePath = WStringToUtf8(filePath);
-
+                        std::string baseName = std::filesystem::path(utf8FilePath).filename().string();
                         if (isSubtitle(filePath)) {
-                            std::vector<std::string> subaddArgs = {"sub-add",utf8FilePath};
+                            std::vector<std::string> subaddArgs = {"sub-add",utf8FilePath, "select", baseName + " External", "Other Tracks"};
                             HandleEvent("mpv-command", subaddArgs);
                             return S_OK;
                         }

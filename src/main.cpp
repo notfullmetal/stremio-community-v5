@@ -84,7 +84,6 @@ int main(int argc, char* argv[])
 
     // Load config
     LoadSettings();
-    LoadCustomMenuFont();
 
     // Updater
     g_updaterThread=std::thread(RunAutoUpdaterOnce);
@@ -117,6 +116,11 @@ int main(int argc, char* argv[])
         AppendToCrashLog(L"[BOOT]: CreateWindow failed!");
         return 1;
     }
+
+    // Scale Values with DPI
+    ScaleWithDPI();
+    LoadCustomMenuFont();
+
     // Load Saved position
     WINDOWPLACEMENT wp;
     if (LoadWindowPlacement(wp)) {

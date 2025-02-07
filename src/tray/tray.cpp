@@ -48,7 +48,7 @@ void LoadCustomMenuFont()
         g_hMenuFont = nullptr;
     }
     LOGFONTW lf = { 0 };
-    lf.lfHeight = -12;
+    lf.lfHeight = -g_font_height;
     lf.lfWeight = FW_MEDIUM;
     wcscpy_s(lf.lfFaceName, L"Arial Rounded MT");
     lf.lfQuality = CLEARTYPE_QUALITY;

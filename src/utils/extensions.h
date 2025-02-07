@@ -3,6 +3,8 @@
 
 #include <string>
 
-void HandlePremidLogin(const std::wstring& finalUri);
+bool HandleExtensions(const std::wstring& finalUri);
+bool HandlePremidLogin(const std::wstring& finalUri);
+bool HandleStylusUsoInstall(const std::wstring& finalUri);
 
 #endif //EXTENSIONS_H

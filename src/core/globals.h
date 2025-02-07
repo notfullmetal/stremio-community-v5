@@ -116,6 +116,7 @@ extern bool g_allowZoom;
 extern int g_tray_itemH;
 extern int g_tray_sepH;
 extern int g_tray_w;
+extern int g_font_height;
 
 // Splash
 extern HWND       g_hSplash;

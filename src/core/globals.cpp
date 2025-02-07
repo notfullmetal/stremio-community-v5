@@ -72,6 +72,7 @@ bool g_allowZoom         = false;
 int g_tray_itemH = 31;
 int g_tray_sepH  = 8;
 int g_tray_w     = 200;
+int g_font_height    = 12;
 
 // Splash
 HWND       g_hSplash      = nullptr;

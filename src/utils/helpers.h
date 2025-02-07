@@ -17,5 +17,6 @@ bool IsDuplicateProcessRunning(const std::vector<std::wstring>& targetProcesses)
 bool isSubtitle(const std::wstring& filePath);
 bool URLContainsAny(const std::wstring& url);
 bool FetchAndParseWhitelist();
+void ScaleWithDPI();
 
 #endif // HELPERS_H

@@ -1,7 +1,9 @@
 #include "helpers.h"
 
 #include <iostream>
+#include <shellscalingapi.h>
 #include <tlhelp32.h>
+#include <VersionHelpers.h>
 #include <winhttp.h>
 #include "../core/globals.h"
 
@@ -284,4 +286,32 @@ bool FetchAndParseWhitelist() {
     }
 
     return false;
+}
+
+void ScaleWithDPI() {
+    if (!g_hWnd) return;
+    UINT dpi = 96;
+    HMONITOR hMonitor = MonitorFromWindow(g_hWnd, MONITOR_DEFAULTTOPRIMARY);
+    HRESULT hr = GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpi, nullptr);
+    if (FAILED(hr)) {
+        // Fall back to using g_hWnd's DPI if GetDpiForMonitor is unavailable
+        if (IsWindowsVersionOrGreater(10, 0, 1607))
+        {
+            dpi = GetDpiForWindow(g_hWnd);
+        }
+        else
+        {
+            HDC hdc = GetDC(g_hWnd);
+            dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+            ReleaseDC(g_hWnd, hdc);
+        }
+    }
+    // Lambda to scale a value based on current DPI
+    auto ScaleValue = [dpi](int value) -> int {
+        return MulDiv(value, dpi, 96);
+    };
+    g_tray_itemH = ScaleValue(g_tray_itemH);
+    g_tray_sepH  = ScaleValue(g_tray_sepH);
+    g_tray_w     = ScaleValue(g_tray_w);
+    g_font_height = ScaleValue(g_font_height);
 }
