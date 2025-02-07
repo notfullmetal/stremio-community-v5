@@ -17,7 +17,7 @@
     "name": "PreMiD",
     "extension_name": "premid",
     "logo": "https://cdn.rcd.gg/PreMiD/websites/P/PreMiD/assets/logo.png",
-    "description": "PreMiD is a simple, configurable utility that allows you to show what you're doing on the web in your Discord now playing status / Discord Rich Presence ",
+    "description": "PreMiD is a simple, configurable utility that allows you to show what you're doing on the web in your Discord now playing status / Discord Rich Presence",
     "types": ["Browser Extension", "other"],
     "behaviorHints": {
       "configurable": true,
@@ -26,6 +26,20 @@
       "p2p": false
     },
     "page": "popup.html"
+  },
+  "stylus": {
+    "name": "Stylus",
+    "extension_name": "stylus",
+    "logo": "https://lh3.googleusercontent.com/2K8pc_5-2DkPam9b3oAWoITZ7IuIz68A5a8Ssg2_MNNHTPWPOPSBVTFdTmeVu9hi8GJxpKbvTekgwpeyGV6vXyBKH80",
+    "description": "Redesign the web with Stylus, a user styles manager. Stylus allows you to easily install themes and skins for many popular sites.",
+    "types": ["Browser Extension", "other"],
+    "behaviorHints": {
+      "configurable": true,
+      "configurationRequired": false,
+      "adult": false,
+      "p2p": false
+    },
+    "page": "manage.html"
   },
   "fallback": {
     "name": "",
@@ -45,6 +59,8 @@
     "https://discord.com",
     "https://premid.app",
     "https://login.premid.app",
+    "https://uso.kkx.one",
+    "https://userstyles.world",
     "chrome-extension://"
   ]
 }
