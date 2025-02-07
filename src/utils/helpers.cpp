@@ -5,6 +5,8 @@
 #include <tlhelp32.h>
 #include <VersionHelpers.h>
 #include <winhttp.h>
+#include <curl/curl.h>
+
 #include "../core/globals.h"
 
 std::string WStringToUtf8(const std::wstring &wstr)
@@ -123,66 +125,31 @@ bool isSubtitle(const std::wstring& filePath) {
         [&](const std::wstring& ext) { return lowerFilePath.ends_with(ext); });
 }
 
-bool IsEndpointReachable(const std::wstring& url) {
-    HINTERNET hSession = WinHttpOpen(L"Reachability Check",
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-    if (!hSession) return false;
+bool IsEndpointReachable(const std::wstring& url)
+{
+    std::string urlUtf8 = WStringToUtf8(url);
+    CURL* curl = curl_easy_init();
+    if (!curl)
+        return false;
 
-    // Set timeouts
-    WinHttpSetTimeouts(hSession, 3000, 3000, 3000, 3000);
+    curl_easy_setopt(curl, CURLOPT_URL, urlUtf8.c_str());
+    curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3L);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 
-    URL_COMPONENTS urlComp = { sizeof(URL_COMPONENTS) };
-    urlComp.dwHostNameLength = (DWORD)-1;
-    urlComp.dwUrlPathLength = (DWORD)-1;
-    urlComp.dwSchemeLength = (DWORD)-1;
-
-    if (!WinHttpCrackUrl(url.c_str(), (DWORD)url.length(), 0, &urlComp)) {
-        WinHttpCloseHandle(hSession);
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK)
+    {
+        curl_easy_cleanup(curl);
         return false;
     }
 
-    std::wstring host(urlComp.lpszHostName, urlComp.dwHostNameLength);
-    std::wstring path(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
-    INTERNET_PORT port = urlComp.nPort;
-    bool useSSL = (urlComp.nScheme == INTERNET_SCHEME_HTTPS);
+    long response_code = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    curl_easy_cleanup(curl);
 
-    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
-    if (!hConnect) {
-        WinHttpCloseHandle(hSession);
-        return false;
-    }
-
-    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"HEAD", path.c_str(),
-        NULL, NULL, NULL, useSSL ? WINHTTP_FLAG_SECURE : 0);
-    if (!hRequest) {
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return false;
-    }
-
-    BOOL sent = WinHttpSendRequest(hRequest, NULL, 0, NULL, 0, 0, 0);
-    if (!sent) {
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return false;
-    }
-
-    BOOL received = WinHttpReceiveResponse(hRequest, NULL);
-    DWORD statusCode = 0;
-    DWORD statusSize = sizeof(statusCode);
-
-    if (received) {
-        WinHttpQueryHeaders(hRequest,
-            WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-            NULL, &statusCode, &statusSize, NULL);
-    }
-
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
-
-    return received && (statusCode >= 200 && statusCode < 300);
+    return (response_code >= 200 && response_code < 300);
 }
 
 std::wstring GetFirstReachableUrl() {
@@ -204,71 +171,34 @@ bool URLContainsAny(const std::wstring& url) {
     });
 }
 
-bool FetchAndParseWhitelist() {
-    HINTERNET hSession = WinHttpOpen(L"DomainWhitelist Updater",
-        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-    if (!hSession) return false;
+static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
+{
+    size_t totalSize = size * nmemb;
+    std::string* str = static_cast<std::string*>(userp);
+    str->append(static_cast<char*>(contents), totalSize);
+    return totalSize;
+}
 
-    WinHttpSetTimeouts(hSession, 3000, 3000, 3000, 3000);
-
-    URL_COMPONENTS urlComp = { sizeof(URL_COMPONENTS) };
-    urlComp.dwHostNameLength = (DWORD)-1;
-    urlComp.dwUrlPathLength = (DWORD)-1;
-    urlComp.dwSchemeLength = (DWORD)-1;
-
-    if (!WinHttpCrackUrl(g_extensionsDetailsUrl.c_str(), (DWORD)g_extensionsDetailsUrl.length(), 0, &urlComp)) {
-        WinHttpCloseHandle(hSession);
+bool FetchAndParseWhitelist()
+{
+    std::string urlUtf8 = WStringToUtf8(g_extensionsDetailsUrl);
+    CURL* curl = curl_easy_init();
+    if (!curl)
         return false;
-    }
-
-    std::wstring host(urlComp.lpszHostName, urlComp.dwHostNameLength);
-    std::wstring path(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
-    INTERNET_PORT port = urlComp.nPort;
-    bool useSSL = (urlComp.nScheme == INTERNET_SCHEME_HTTPS);
-
-    HINTERNET hConnect = WinHttpConnect(hSession, host.c_str(), port, 0);
-    if (!hConnect) {
-        WinHttpCloseHandle(hSession);
-        return false;
-    }
-
-    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", path.c_str(),
-        NULL, NULL, NULL, useSSL ? WINHTTP_FLAG_SECURE : 0);
-    if (!hRequest) {
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return false;
-    }
-
-    if (!WinHttpSendRequest(hRequest, NULL, 0, NULL, 0, 0, 0)) {
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return false;
-    }
-
-    if (!WinHttpReceiveResponse(hRequest, NULL)) {
-        WinHttpCloseHandle(hRequest);
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return false;
-    }
 
     std::string response;
-    DWORD bytesRead = 0;
-    do {
-        char buffer[4096];
-        if (!WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytesRead)) {
-            break;
-        }
-        if (bytesRead > 0) {
-            response.append(buffer, bytesRead);
-        }
-    } while (bytesRead > 0);
+    curl_easy_setopt(curl, CURLOPT_URL, urlUtf8.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3L);
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK)
+        return false;
 
     try {
         json j = json::parse(response);
