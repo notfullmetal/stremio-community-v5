@@ -287,6 +287,10 @@ If you want to build this app yourself, check the “[docs](https://github.com/Z
 ## ⚠️ **Disclaimer**
 This project is not affiliated with **Stremio** in any way.
 
+This fork is provided solely for educational and lawful use. **It does not support piracy or any form of copyright infringement.** 
+It is the user’s responsibility to ensure that any content accessed is fully compliant with the DMCA and all applicable copyright laws. 
+The project maintainers do not condone or support any illegal activities.
+
 ## 🤝 **Support Development**
 If you enjoy this project and want to support further development, consider [buying me a coffee](https://ko-fi.com/zaarrg). Your support means a lot! ☕
 
