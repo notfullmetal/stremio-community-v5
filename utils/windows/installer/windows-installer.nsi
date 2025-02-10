@@ -308,6 +308,14 @@ Function ${un}RemoveAllExceptWebView2
     StrCmp $R2 "." Next
     StrCmp $R2 ".." Next
 
+    ; Check if this item’s name begins with our backup folder prefix.
+    ; Copy the first 23 characters ("portable_config_backup_") into $R5.
+    StrCpy $R5 $R2 23
+    StrCmp $R5 "portable_config_backup_" 0 notBackup
+        ; If equal, skip deletion for this folder.
+        Goto next
+    notBackup:
+
     ; Skip the excluded directory
     StrCmp $R2 $R0 Next
 
