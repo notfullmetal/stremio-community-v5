@@ -70,15 +70,13 @@ RequestExecutionLevel user
 ;Define UI settings
 
 ;!define MUI_UI_HEADERIMAGE_RIGHT "../../../images/icon.png"
-!define MUI_ICON "../../../images/stremio.ico"
-!define MUI_UNICON "../../../images/stremio.ico"
+!define MUI_ICON "../../../images/stremio2.ico"
+!define MUI_UNICON "../../../images/stremio2.ico"
 
 ; WARNING; these bmps have to be generated in BMP3 - convert SMTH BMP3:SMTH.bmp
 !define MUI_WELCOMEFINISHPAGE_BITMAP "windows-installer.bmp"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "windows-installer.bmp"
 !define MUI_ABORTWARNING
-!define MUI_FINISHPAGE_LINK "www.stremio.com"
-!define MUI_FINISHPAGE_LINK_LOCATION "${APP_URL}"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\stremio.exe"
 
 ; Hack...
@@ -145,25 +143,53 @@ Var AssociateMagnetCheckbox
 Var AssociateMediaCheckbox
 Var AssociateTorrentCheckbox
 Var checkbox_value
+Var InstallStremioServiceCheckbox
 
 Function fin_pg_options
-    ${NSD_CreateCheckbox} 180 -100 100% 8u "Associate ${APP_NAME} with .torrent files"
+    ; Install Stremio Service checkbox (top)
+    ${NSD_CreateCheckbox} 180 -100 100% 8u "Install Stremio Service"
+    Pop $InstallStremioServiceCheckbox
+    SetCtlColors $InstallStremioServiceCheckbox '0xFF0000' '0xFFFFFF'
+    ${NSD_Uncheck} $InstallStremioServiceCheckbox
+
+    ; Leave a visual gap here (e.g., 20 pixels)
+
+    ${NSD_CreateCheckbox} 180 -70 100% 8u "Associate ${APP_NAME} with .torrent files"
     Pop $AssociateTorrentCheckbox
     SetCtlColors $AssociateTorrentCheckbox '0xFF0000' '0xFFFFFF'
     ${NSD_Check} $AssociateTorrentCheckbox
 
-    ${NSD_CreateCheckbox} 180 -80 100% 8u "Associate ${APP_NAME} with magnet links"
+    ${NSD_CreateCheckbox} 180 -50 100% 8u "Associate ${APP_NAME} with magnet links"
     Pop $AssociateMagnetCheckbox
     SetCtlColors $AssociateMagnetCheckbox '0xFF0000' '0xFFFFFF'
     ${NSD_Check} $AssociateMagnetCheckbox
 
-    ${NSD_CreateCheckbox} 180 -60 100% 8u "Associate ${APP_NAME} as media player"
+    ${NSD_CreateCheckbox} 180 -30 100% 8u "Associate ${APP_NAME} as media player"
     Pop $AssociateMediaCheckbox
     SetCtlColors $AssociateMediaCheckbox '0xFF0000' '0xFFFFFF'
     ${NSD_Check} $AssociateMediaCheckbox
 FunctionEnd
 
 Function fin_pg_leave
+    ; Check "Install Stremio Service" checkbox state
+    ${NSD_GetState} $InstallStremioServiceCheckbox $checkbox_value
+    ${If} $checkbox_value == ${BST_CHECKED}
+        SetDetailsPrint textonly
+        DetailPrint "Installing Stremio Service..."
+        SetDetailsPrint none
+        ; Extract StremioServiceSetup.exe
+        File "/oname=$PLUGINSDIR\StremioServiceSetup.exe" "..\StremioServiceSetup.exe"
+        ExecWait '"$PLUGINSDIR\StremioServiceSetup.exe" /silent' $R0
+        SetDetailsPrint textonly
+        ${If} $R0 == 0
+            DetailPrint "Stremio Service installed successfully."
+        ${Else}
+            DetailPrint "Failed to install Stremio Service (error: $R0)."
+            MessageBox MB_OK|MB_ICONEXCLAMATION "Error installing Stremio Service (error code: $R0)."
+        ${EndIf}
+        SetDetailsPrint none
+    ${EndIf}
+
     ${NSD_GetState} $AssociateTorrentCheckbox $checkbox_value
     ${If} $checkbox_value == ${BST_CHECKED}
         !insertmacro APP_ASSOCIATE "torrent" "stremio" "BitTorrent file" "$INSTDIR\stremio.exe,0" "Play with Stremio" "$INSTDIR\stremio.exe $\"%1$\""
