@@ -55,7 +55,7 @@ const VCPKG_CMAKE = 'C:/bin/vcpkg/scripts/buildsystems/vcpkg.cmake';
             fs.mkdirSync(BUILD_DIR, { recursive: true });
         }
 
-        console.log('\n=== Running CMake in cmake-build-release ===');
+        console.log(`\n=== Running CMake in cmake-build-${debugBuild ? "Debug" : "Release"} ===`);
         process.chdir(BUILD_DIR);
         execSync(
             `cmake -G Ninja -DCMAKE_BUILD_TYPE=${debugBuild ? "Debug" : "Release"} -DCMAKE_TOOLCHAIN_FILE=${VCPKG_CMAKE} -DVCPKG_TARGET_TRIPLET=${VCPKG_TRIPLET} ..`,

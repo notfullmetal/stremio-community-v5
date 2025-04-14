@@ -1,5 +1,6 @@
 #include "server.h"
 #include <windows.h>
+#include <shlobj.h>
 #include <string>
 #include <thread>
 #include <atomic>
@@ -27,13 +28,27 @@ bool StartNodeServer()
     std::wstring exeDir   = GetExeDirectory();
     std::wstring exePath = exeDir + L"\\stremio-runtime.exe";
     std::wstring scriptPath = exeDir + L"\\server.js";
-    if(!FileExists(exePath)){
-        AppendToCrashLog(L"[NODE]: Missing stremio-runtime.exe");
-        return false;
-    }
-    if(!FileExists(scriptPath)){
-        AppendToCrashLog(L"[NODE]: Missing server.js");
-        return false;
+
+    if (!FileExists(exePath) || !FileExists(scriptPath)) {
+        // Check alternative path in %localappdata%
+        wchar_t localAppData[MAX_PATH];
+        if (SUCCEEDED(SHGetFolderPathW(nullptr, CSIDL_LOCAL_APPDATA, nullptr, 0, localAppData))) {
+            std::wstring altDir = std::wstring(localAppData) + L"\\Programs\\StremioService";
+            std::wstring altExePath = altDir + L"\\stremio-runtime.exe";
+            std::wstring altScriptPath = altDir + L"\\server.js";
+
+            if (FileExists(altExePath) && FileExists(altScriptPath)) {
+                exePath = altExePath;
+                scriptPath = altScriptPath;
+                exeDir = altDir;
+            } else {
+                AppendToCrashLog(L"[NODE]: Missing stremio-runtime.exe and server.js in both exeDir and localappdata.");
+                return false;
+            }
+        } else {
+            AppendToCrashLog(L"[NODE]: Failed to retrieve local app data path.");
+            return false;
+        }
     }
 
     if (!g_serverJob) {
