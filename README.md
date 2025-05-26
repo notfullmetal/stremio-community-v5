@@ -40,6 +40,7 @@
   <li>🔊 <strong>Dolby Atmos Support</strong>: Support for all mpv advanced audio features.</li>
   <li>🖼️ <strong>Picture in Picture</strong>: Picture in Picture Mode Support</li>
   <li>🌑 <strong>Dark Mode</strong>: Windows Dark mode support</li>
+  <li>💬 <strong>Discord Rich Presence</strong>: Show what you're watching in real-time on your Discord profile</li>
   <li>🖼️ <strong>Thumbnail Preview</strong>: ThumbFast support to allow for preview thumbnails when seeking</li>
   <li>📁 <strong>Local File Playback</strong>: Play any file MPV and ffmpeg supports, just use <strong>open with</strong> 'stremio' or <strong>drag and drop</strong></li>
   <li>🔡 <strong>Local Subtitles</strong>: Add any Subtitle file using drag and drop while playing a video</li>
@@ -83,6 +84,16 @@
 </p>
 <p align="center">
   <small><i>Best on local files using thumbfast. Size can be adjusted.</i></small>
+</p>
+
+<p align="center">
+  <strong>Discord Rich Presence</strong>
+</p>
+<p align="center">
+  <img src="https://i.imgur.com/V5YgSSx.png" alt="Discord Rich Presence Example"/>
+</p>
+<p align="center">
+  <small><i>Live activity like Discovering, Watching, or Paused updates in real-time.</i></small>
 </p>
 
 
