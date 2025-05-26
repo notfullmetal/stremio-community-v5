@@ -305,7 +305,11 @@ The project maintainers do not condone or support any illegal activities.
 ## 🤝 **Support Development**
 If you enjoy this project and want to support further development, consider [buying me a coffee](https://ko-fi.com/zaarrg). Your support means a lot! ☕
 
-[![Support me on Ko‑fi](https://img.shields.io/badge/Support%20me%20on%20Ko--fi-grey?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/zaarrg)
+<p align="center">
+  <a href="https://ko-fi.com/zaarrg">
+    <img src="https://img.shields.io/badge/Support%20me%20on%20Ko--fi-grey?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support me on Ko-fi">
+  </a>
+</p>
 
 <p align="center">
   <strong>⭐ Made with ❤️ by <a href="https://github.com/Zaarrg">Zaarrg</a> ⭐</strong>
