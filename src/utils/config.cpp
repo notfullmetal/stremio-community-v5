@@ -29,6 +29,7 @@ void LoadSettings()
     g_allowZoom = GetPrivateProfileIntW(L"General", L"AllowZoom", 0, iniPath.c_str());
     g_pauseOnMinimize = (GetPrivateProfileIntW(L"General", L"PauseOnMinimize", 1, iniPath.c_str()) == 1);
     g_pauseOnLostFocus = (GetPrivateProfileIntW(L"General", L"PauseOnLostFocus", 0, iniPath.c_str()) == 1);
+    g_isRpcOn = (GetPrivateProfileIntW(L"General", L"DiscordRPC", 1, iniPath.c_str()) == 1);
     //Mpv
     wchar_t voBuffer[32];
     GetPrivateProfileStringW(L"MPV", L"VideoOutput", L"gpu-next", voBuffer, 32, iniPath.c_str());
@@ -47,12 +48,14 @@ void SaveSettings()
     const wchar_t* pauseMinVal  = g_pauseOnMinimize ? L"1" : L"0";
     const wchar_t* pauseFocVal  = g_pauseOnLostFocus ? L"1" : L"0";
     const wchar_t* allowZoomVal = g_allowZoom ? L"1" : L"0";
+    const wchar_t* rpcVal = g_isRpcOn ? L"1" : L"0";
 
     WritePrivateProfileStringW(L"General", L"CloseOnExit", closeVal, iniPath.c_str());
     WritePrivateProfileStringW(L"General", L"UseDarkTheme", darkVal, iniPath.c_str());
     WritePrivateProfileStringW(L"General", L"PauseOnMinimize", pauseMinVal, iniPath.c_str());
     WritePrivateProfileStringW(L"General", L"PauseOnLostFocus", pauseFocVal, iniPath.c_str());
     WritePrivateProfileStringW(L"General", L"AllowZoom", allowZoomVal, iniPath.c_str());
+    WritePrivateProfileStringW(L"General", L"DiscordRPC", rpcVal, iniPath.c_str());
     WriteIntToIni(L"MPV", L"InitialVolume", g_currentVolume, iniPath);
 }
 

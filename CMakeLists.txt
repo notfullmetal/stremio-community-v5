@@ -5,20 +5,28 @@ project(stremio VERSION "5.0.17")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+option(DEBUG_LOG "Allow debug logs" ON)
+
 # Locate MPV
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     # 64-bit architecture
     set(MPV_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps/libmpv/x86_64/include")
     set(MPV_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/deps/libmpv/x86_64/mpv.lib")
     set(MPV_DLL "${CMAKE_CURRENT_SOURCE_DIR}/deps/libmpv/x86_64/libmpv-2.dll")
+
+    set(DISCORD_LIB "${CMAKE_CURRENT_SOURCE_DIR}/deps/discord-rpc/win64-static/lib/discord-rpc.lib")
+    set(DISCORD_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps/discord-rpc/win64-static/include")
 else()
     # 32-bit architecture
     set(MPV_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps/libmpv/i686/include")
     set(MPV_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/deps/libmpv/i686/mpv.lib")
     set(MPV_DLL "${CMAKE_CURRENT_SOURCE_DIR}/deps/libmpv/i686/libmpv-2.dll")
+
+    set(DISCORD_LIB "${CMAKE_CURRENT_SOURCE_DIR}/deps/discord-rpc/win32-static/lib/discord-rpc.lib")
+    set(DISCORD_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps/discord-rpc/win32-static/include")
 endif()
 
-
+include_directories(${DISCORD_INCLUDE_DIR})
 include_directories(${MPV_INCLUDE_DIR})
 
 find_package(OpenSSL REQUIRED)
@@ -54,6 +62,8 @@ set(SOURCES
         src/resource.h
         src/utils/extensions.cpp
         src/utils/extensions.h
+        src/utils/discord.cpp
+        src/utils/discord.h
 )
 
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
@@ -72,9 +82,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         OpenSSL::Crypto
         CURL::libcurl
         ${MPV_LIBRARY}
+        ${DISCORD_LIB}
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:DEBUG_BUILD>)
+target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG_LOG)
 
 # Copy MPV DLL
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

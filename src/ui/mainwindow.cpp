@@ -15,6 +15,7 @@
 #include "../ui/splash.h"
 #include "../webview/webview.h"
 #include "../updater/updater.h"
+#include "../utils/discord.h"
 
 // Single-instance
 bool FocusExistingInstance(const std::wstring &protocolArg)
@@ -124,7 +125,7 @@ void SendToJS(const std::string &eventName, const nlohmann::json &eventData)
     std::wstring wpayload(payload.begin(), payload.end());
     g_webview->PostWebMessageAsString(wpayload.c_str());
 
-#ifdef DEBUG_BUILD
+#ifdef DEBUG_LOG
     std::cout << "[Native->JS] " << payload << "\n";
 #endif
 }
@@ -226,6 +227,8 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
         } else {
             g_webview->Navigate(uri.c_str());
         }
+    } else if (ev == "activity") {
+        SetDiscordPresenceFromArgs(args);
     } else {
         std::cout<<"Unknown event="<<ev<<"\n";
     }
@@ -235,7 +238,7 @@ void HandleEvent(const std::string &ev, std::vector<std::string> &args)
 void HandleInboundJSON(const std::string &msg)
 {
     try {
-#ifdef DEBUG_BUILD
+#ifdef DEBUG_LOG
         std::cout << "[JS -> NATIVE]: " << msg << std::endl;
 #endif
 

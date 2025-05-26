@@ -9,6 +9,7 @@
 #include "../utils/helpers.h"
 #include <gdiplus.h>
 #include <sstream>
+#include "discord_rpc.h"
 
 #include "config.h"
 
@@ -64,4 +65,6 @@ void Cleanup()
     if(g_gdiplusToken) {
         Gdiplus::GdiplusShutdown(g_gdiplusToken);
     }
+
+    Discord_Shutdown();
 }

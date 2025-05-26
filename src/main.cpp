@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <VersionHelpers.h>
+#include "discord_rpc.h"
 
 #include "ui/mainwindow.h"
 #include "core/globals.h"
@@ -20,6 +21,7 @@
 #include "updater/updater.h"
 #include "utils/helpers.h"
 #include "utils/config.h"
+#include "utils/discord.h"
 // This started as 1-week project so please don't take the code to seriously
 int main(int argc, char* argv[])
 {
@@ -84,6 +86,9 @@ int main(int argc, char* argv[])
 
     // Load config
     LoadSettings();
+
+    // Initialize Discord RPC
+    InitializeDiscord();
 
     // Updater
     g_updaterThread=std::thread(RunAutoUpdaterOnce);
@@ -154,6 +159,9 @@ int main(int argc, char* argv[])
     while(GetMessage(&msg, nullptr, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+
+        // Run Discord RPC callbacks
+        Discord_RunCallbacks();
     }
 
     if(g_darkBrush){

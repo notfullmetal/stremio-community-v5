@@ -267,7 +267,7 @@ void InitWebView2(HWND hWnd)
                     if (!settings) return E_FAIL;
 
                     if(settings) {
-                        #ifndef DEBUG_BUILD
+                        #ifndef DEBUG_LOG
                         settings->put_AreDevToolsEnabled(FALSE);
                         #endif
                         settings->put_IsStatusBarEnabled(FALSE);
@@ -392,7 +392,7 @@ static void SetupWebMessageHandler()
                 HRESULT hr = args->get_MenuItems(&items);
                 if (FAILED(hr) || !items) return hr;
 
-                #ifdef DEBUG_BUILD
+                #ifdef DEBUG_LOG
                 return S_OK; //DEV TOOLS DEBUG ONLY
                 #endif
 

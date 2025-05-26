@@ -67,6 +67,7 @@ HWND            g_trayHwnd   = nullptr;
 bool g_pauseOnMinimize   = true;
 bool g_pauseOnLostFocus  = false;
 bool g_allowZoom         = false;
+bool g_isRpcOn = true;
 
 // Tray sizes
 int g_tray_itemH = 31;

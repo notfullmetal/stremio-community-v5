@@ -111,6 +111,7 @@ extern HWND            g_trayHwnd;
 extern bool g_pauseOnMinimize;
 extern bool g_pauseOnLostFocus;
 extern bool g_allowZoom;
+extern bool g_isRpcOn;
 
 // Tray sizes
 extern int g_tray_itemH;
