@@ -67,4 +67,6 @@ void Cleanup()
     }
 
     Discord_Shutdown();
+
+    UnregisterHotKey(g_hWnd, 1);
 }

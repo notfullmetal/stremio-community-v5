@@ -391,6 +391,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
+    case WM_HOTKEY:
+    {
+        // PlayPause Hotkey
+        if (wParam == 1) {
+            std::vector<std::string> args = {"cycle", "pause"};
+            HandleMpvCommand(args);
+        }
+        break;
+    }
     case WM_SETTINGCHANGE:
     {
         UpdateTheme(hWnd);

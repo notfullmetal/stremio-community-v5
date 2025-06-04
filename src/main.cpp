@@ -122,6 +122,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    //Add PlayPause Hotkey
+    if (!RegisterHotKey(g_hWnd, 1, 0, VK_MEDIA_PLAY_PAUSE)) {
+        AppendToCrashLog(L"[BOOT]: Failed to register hotkey!");
+    }
+
     // Scale Values with DPI
     ScaleWithDPI();
     LoadCustomMenuFont();
