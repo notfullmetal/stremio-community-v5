@@ -506,15 +506,16 @@ static void SetupWebMessageHandler()
                     {
                         std::wstring filePath = wuri.substr(8);
                         std::string utf8FilePath = WStringToUtf8(filePath);
-                        std::string baseName = std::filesystem::path(utf8FilePath).filename().string();
+                        std::string decodedFilePathUtf8 = decodeURIComponent(utf8FilePath);
+                        std::string baseName = std::filesystem::path(decodedFilePathUtf8).filename().string();
                         if (isSubtitle(filePath)) {
-                            std::vector<std::string> subaddArgs = {"sub-add",utf8FilePath, "select", baseName + " External", "Other Tracks"};
+                            std::vector<std::string> subaddArgs = {"sub-add",decodedFilePathUtf8, "select", baseName + " External", "Other Tracks"};
                             HandleEvent("mpv-command", subaddArgs);
                             return S_OK;
                         }
                         json j;
                         j["type"] = "FileDropped";
-                        j["path"] = utf8FilePath;
+                        j["path"] = decodedFilePathUtf8;
                         SendToJS("FileDropped", j);
                         return S_OK;
                     }
