@@ -38,11 +38,51 @@ jobs:
     - name: Setup CMake
       uses: lukka/get-cmake@latest
     
-    - name: Setup vcpkg (Official Action)
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: '01f602195983560bc1c9a2b9fdd3fef76b8e54fe'
-        vcpkgJsonGlob: '**/vcpkg.json'
+    - name: Setup vcpkg (Simple & Reliable)
+      run: |
+        Write-Host "Setting up vcpkg with latest stable version..."
+        
+        # Use a clean workspace directory
+        $vcpkgPath = "C:\vcpkg-build"
+        Write-Host "vcpkg path: $vcpkgPath"
+        
+        # Clean removal of any existing vcpkg
+        if (Test-Path $vcpkgPath) {
+          Write-Host "Removing existing vcpkg..."
+          Remove-Item -Path $vcpkgPath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        
+        # Clone latest vcpkg
+        Write-Host "Cloning vcpkg..."
+        git clone https://github.com/Microsoft/vcpkg.git $vcpkgPath
+        cd $vcpkgPath
+        
+        # Bootstrap vcpkg
+        Write-Host "Bootstrapping vcpkg..."
+        .\bootstrap-vcpkg.bat
+        if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed" }
+        
+        # Install packages individually (more reliable than manifest mode)
+        Write-Host "Installing packages..."
+        .\vcpkg.exe install openssl:x64-windows-static
+        if ($LASTEXITCODE -ne 0) { throw "openssl installation failed" }
+        
+        .\vcpkg.exe install nlohmann-json:x64-windows-static
+        if ($LASTEXITCODE -ne 0) { throw "nlohmann-json installation failed" }
+        
+        .\vcpkg.exe install webview2:x64-windows-static
+        if ($LASTEXITCODE -ne 0) { throw "webview2 installation failed" }
+        
+        .\vcpkg.exe install curl:x64-windows-static
+        if ($LASTEXITCODE -ne 0) { throw "curl installation failed" }
+        
+        # Set environment variables
+        echo "VCPKG_ROOT=$vcpkgPath" >> $env:GITHUB_ENV
+        echo "VCPKG_DEFAULT_TRIPLET=x64-windows-static" >> $env:GITHUB_ENV
+        
+        Write-Host "vcpkg setup complete"
+        .\vcpkg.exe list
+      shell: powershell
     
     - name: Download MPV library
       run: |
@@ -117,19 +157,14 @@ jobs:
     
     - name: Configure CMake
       run: |
-        Write-Host "Configuring CMake with official vcpkg integration..."
+        Write-Host "Configuring CMake with vcpkg integration..."
         Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
-        Write-Host "RUNVCPKG_VCPKG_ROOT: $env:RUNVCPKG_VCPKG_ROOT"
-        
-        # Use the vcpkg root set by lukka action
-        $vcpkgRoot = if ($env:RUNVCPKG_VCPKG_ROOT) { $env:RUNVCPKG_VCPKG_ROOT } else { $env:VCPKG_ROOT }
-        Write-Host "Using vcpkg root: $vcpkgRoot"
         
         # Create build directory
         New-Item -ItemType Directory -Path "build" -Force
         
         # Configure CMake with vcpkg toolchain
-        $toolchainFile = "$vcpkgRoot\scripts\buildsystems\vcpkg.cmake"
+        $toolchainFile = "$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
         Write-Host "Toolchain file: $toolchainFile"
         Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
         
@@ -140,12 +175,15 @@ jobs:
           -A x64
         
         if ($LASTEXITCODE -ne 0) { 
-          Write-Host "CMake configuration failed. Environment details:"
+          Write-Host "CMake configuration failed."
           Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
-          Write-Host "RUNVCPKG_VCPKG_ROOT: $env:RUNVCPKG_VCPKG_ROOT"
-          Write-Host "Calculated vcpkg root: $vcpkgRoot"
           Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
-          ls $vcpkgRoot
+          if (Test-Path $toolchainFile) {
+            Write-Host "Toolchain file preview:"
+            Get-Content $toolchainFile | Select-Object -First 5
+          }
+          Write-Host "vcpkg directory contents:"
+          ls $env:VCPKG_ROOT
           throw "CMake configuration failed" 
         }
         
