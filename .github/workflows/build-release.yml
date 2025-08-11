@@ -18,7 +18,7 @@ on:
         type: boolean
 
 env:
-  VCPKG_DEFAULT_TRIPLET: x64-windows-static
+  VCPKG_FEATURE_FLAGS: manifests
 
 jobs:
   build-windows:
@@ -40,13 +40,22 @@ jobs:
     
     - name: Setup vcpkg
       run: |
+        Write-Host "Setting up vcpkg for manifest mode..."
+        
         # Clone vcpkg to a predictable location
         git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
         cd C:\vcpkg
         git checkout a42af01b72c28a8e1d7b48107b33e4f286a55ef6
+        
+        # Bootstrap vcpkg
         .\bootstrap-vcpkg.bat
-        .\vcpkg integrate install
-        echo "C:\vcpkg" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed" }
+        
+        # Set environment variables for manifest mode
+        echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+        echo "VCPKG_DEFAULT_TRIPLET=x64-windows-static" >> $env:GITHUB_ENV
+        
+        Write-Host "vcpkg setup complete"
       shell: powershell
     
     - name: Cache vcpkg packages
@@ -56,18 +65,29 @@ jobs:
           C:\vcpkg\installed
           C:\vcpkg\buildtrees
           C:\vcpkg\packages
-        key: vcpkg-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}
+          ${{ github.workspace }}/vcpkg_installed
+        key: vcpkg-manifest-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: |
-          vcpkg-${{ runner.os }}-
+          vcpkg-manifest-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}-
+          vcpkg-manifest-${{ runner.os }}-
     
-    - name: Install vcpkg dependencies
+    - name: Install vcpkg dependencies (manifest mode)
       run: |
-        # Install dependencies using vcpkg
-        C:\vcpkg\vcpkg.exe install openssl:x64-windows-static
-        C:\vcpkg\vcpkg.exe install nlohmann-json:x64-windows-static
-        C:\vcpkg\vcpkg.exe install webview2:x64-windows-static
-        C:\vcpkg\vcpkg.exe install curl:x64-windows-static
-      shell: cmd
+        Write-Host "Installing dependencies using vcpkg manifest mode..."
+        
+        # In manifest mode, vcpkg reads vcpkg.json automatically
+        # We just need to run vcpkg install with the correct triplet
+        C:\vcpkg\vcpkg.exe install --triplet x64-windows-static
+        
+        if ($LASTEXITCODE -ne 0) { 
+          Write-Host "vcpkg install failed. Checking available packages..."
+          C:\vcpkg\vcpkg.exe list
+          throw "vcpkg dependency installation failed" 
+        }
+        
+        Write-Host "Dependencies installed successfully"
+        C:\vcpkg\vcpkg.exe list
+      shell: powershell
     
     - name: Download MPV library
       run: |
@@ -142,16 +162,45 @@ jobs:
     
     - name: Configure CMake
       run: |
+        Write-Host "Configuring CMake with vcpkg integration..."
+        
+        # Create build directory
+        New-Item -ItemType Directory -Path "build" -Force
+        
+        # Configure CMake with vcpkg toolchain
         cmake -B build -S . `
           -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" `
           -DVCPKG_TARGET_TRIPLET=x64-windows-static `
           -DCMAKE_BUILD_TYPE=Release `
+          -DVCPKG_MANIFEST_MODE=ON `
           -A x64
+        
+        if ($LASTEXITCODE -ne 0) { 
+          Write-Host "CMake configuration failed. Checking vcpkg integration..."
+          Write-Host "vcpkg root: $env:VCPKG_ROOT"
+          Write-Host "Toolchain file exists: $(Test-Path 'C:\vcpkg\scripts\buildsystems\vcpkg.cmake')"
+          throw "CMake configuration failed" 
+        }
+        
+        Write-Host "CMake configuration successful"
       shell: powershell
     
     - name: Build project
       run: |
+        Write-Host "Building project with CMake..."
+        
         cmake --build build --config Release --parallel
+        
+        if ($LASTEXITCODE -ne 0) { 
+          Write-Host "Build failed. Checking build logs..."
+          if (Test-Path "build\CMakeFiles\CMakeError.log") {
+            Write-Host "CMake Error Log:"
+            Get-Content "build\CMakeFiles\CMakeError.log" | Select-Object -Last 50
+          }
+          throw "Project build failed" 
+        }
+        
+        Write-Host "Build completed successfully"
       shell: powershell
     
     - name: Verify build output
