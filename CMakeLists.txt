@@ -3,7 +3,23 @@ cmake_minimum_required(VERSION 3.16)
 project(stremio VERSION "5.0.19")
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# Detect if we're cross-compiling with mingw-w64
+if(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(CROSS_COMPILING_WINDOWS TRUE)
+    message(STATUS "Cross-compiling for Windows using ${CMAKE_C_COMPILER}")
+else()
+    set(CROSS_COMPILING_WINDOWS FALSE)
+endif()
+
+# Set runtime library based on compiler
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+elseif(CROSS_COMPILING_WINDOWS)
+    # For mingw-w64, use static linking to avoid DLL dependencies
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++ -static")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+endif()
 
 option(DEBUG_LOG "Allow debug logs" ON)
 
@@ -69,21 +85,48 @@ set(SOURCES
 add_executable(${PROJECT_NAME} WIN32 ${SOURCES})
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-        gdiplus.lib
-        dwmapi.lib
-        Shcore.lib
-        Msimg32.lib
-        winhttp.lib
-        shlwapi.lib
-        nlohmann_json::nlohmann_json
-        unofficial::webview2::webview2
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        CURL::libcurl
-        ${MPV_LIBRARY}
-        ${DISCORD_LIB}
-)
+# Link libraries based on compiler and platform
+if(CROSS_COMPILING_WINDOWS)
+    # For mingw-w64 cross-compilation, use different library names
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+            gdiplus
+            dwmapi
+            shcore
+            msimg32
+            winhttp
+            shlwapi
+            nlohmann_json::nlohmann_json
+            unofficial::webview2::webview2
+            OpenSSL::SSL
+            OpenSSL::Crypto
+            CURL::libcurl
+            ${MPV_LIBRARY}
+            ${DISCORD_LIB}
+            # Additional mingw-w64 specific libraries
+            ole32
+            oleaut32
+            uuid
+            comctl32
+            comdlg32
+    )
+else()
+    # For MSVC (original configuration)
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+            gdiplus.lib
+            dwmapi.lib
+            Shcore.lib
+            Msimg32.lib
+            winhttp.lib
+            shlwapi.lib
+            nlohmann_json::nlohmann_json
+            unofficial::webview2::webview2
+            OpenSSL::SSL
+            OpenSSL::Crypto
+            CURL::libcurl
+            ${MPV_LIBRARY}
+            ${DISCORD_LIB}
+    )
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG_LOG)
 

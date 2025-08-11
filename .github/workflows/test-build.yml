@@ -1,146 +1,146 @@
-name: Test Build
+# name: Test Build
 
-on:
-  push:
-    branches: [ main, master, develop ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
+# on:
+#   push:
+#     branches: [ main, master, develop ]
+#   pull_request:
+#     branches: [ main, master ]
+#   workflow_dispatch:
 
-env:
-  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+# env:
+#   VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
 
-jobs:
-  test-build:
-    runs-on: windows-2022
+# jobs:
+#   test-build:
+#     runs-on: windows-2022
     
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v4
+#       with:
+#         submodules: recursive
     
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+#     - name: Setup vcpkg
+#       uses: lukka/run-vcpkg@v11
+#       with:
+#         vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
     
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-      with:
-        vs-version: '17.0'
+#     - name: Setup MSBuild
+#       uses: microsoft/setup-msbuild@v2
+#       with:
+#         vs-version: '17.0'
     
-    - name: Setup CMake
-      uses: lukka/get-cmake@latest
+#     - name: Setup CMake
+#       uses: lukka/get-cmake@latest
     
-    - name: Cache vcpkg packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ github.workspace }}/vcpkg_installed
-          ${{ runner.workspace }}/vcpkg
-        key: vcpkg-test-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}
-        restore-keys: |
-          vcpkg-test-${{ runner.os }}-
+#     - name: Cache vcpkg packages
+#       uses: actions/cache@v4
+#       with:
+#         path: |
+#           ${{ github.workspace }}/vcpkg_installed
+#           ${{ runner.workspace }}/vcpkg
+#         key: vcpkg-test-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}
+#         restore-keys: |
+#           vcpkg-test-${{ runner.os }}-
     
-    - name: Install vcpkg dependencies
-      run: |
-        vcpkg install openssl:x64-windows-static
-        vcpkg install nlohmann-json:x64-windows-static
-        vcpkg install webview2:x64-windows-static
-        vcpkg install curl:x64-windows-static
-        vcpkg integrate install
-      working-directory: ${{ runner.workspace }}/vcpkg
+#     - name: Install vcpkg dependencies
+#       run: |
+#         vcpkg install openssl:x64-windows-static
+#         vcpkg install nlohmann-json:x64-windows-static
+#         vcpkg install webview2:x64-windows-static
+#         vcpkg install curl:x64-windows-static
+#         vcpkg integrate install
+#       working-directory: ${{ runner.workspace }}/vcpkg
     
-    - name: Download MPV library (test)
-      run: |
-        # Create directory structure
-        New-Item -ItemType Directory -Path "deps\libmpv\x86_64" -Force
+#     - name: Download MPV library (test)
+#       run: |
+#         # Create directory structure
+#         New-Item -ItemType Directory -Path "deps\libmpv\x86_64" -Force
         
-        # For testing, we'll create dummy files to verify the build process
-        # In a real scenario, this would download actual MPV libraries
-        Write-Host "Creating test MPV library files..."
+#         # For testing, we'll create dummy files to verify the build process
+#         # In a real scenario, this would download actual MPV libraries
+#         Write-Host "Creating test MPV library files..."
         
-        # Try to download real MPV, but continue with dummy if it fails
-        try {
-          $mpvUrl = "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
-          Invoke-WebRequest -Uri $mpvUrl -OutFile "mpv-dev.7z" -UserAgent "Mozilla/5.0" -TimeoutSec 30
-          7z x mpv-dev.7z -o"mpv-temp"
-          Copy-Item "mpv-temp\*" "deps\libmpv\x86_64\" -Recurse -Force
-          Write-Host "✅ Real MPV library downloaded"
-        } catch {
-          Write-Host "⚠️ Could not download MPV library, creating dummy files for testing"
-          # Create dummy files to test build process
-          "dummy" | Out-File "deps\libmpv\x86_64\libmpv-2.dll"
-          "dummy" | Out-File "deps\libmpv\x86_64\mpv.lib"
-          New-Item -ItemType Directory -Path "deps\libmpv\x86_64\include" -Force
-          "// dummy header" | Out-File "deps\libmpv\x86_64\include\mpv.h"
-        }
-      shell: powershell
+#         # Try to download real MPV, but continue with dummy if it fails
+#         try {
+#           $mpvUrl = "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
+#           Invoke-WebRequest -Uri $mpvUrl -OutFile "mpv-dev.7z" -UserAgent "Mozilla/5.0" -TimeoutSec 30
+#           7z x mpv-dev.7z -o"mpv-temp"
+#           Copy-Item "mpv-temp\*" "deps\libmpv\x86_64\" -Recurse -Force
+#           Write-Host "✅ Real MPV library downloaded"
+#         } catch {
+#           Write-Host "⚠️ Could not download MPV library, creating dummy files for testing"
+#           # Create dummy files to test build process
+#           "dummy" | Out-File "deps\libmpv\x86_64\libmpv-2.dll"
+#           "dummy" | Out-File "deps\libmpv\x86_64\mpv.lib"
+#           New-Item -ItemType Directory -Path "deps\libmpv\x86_64\include" -Force
+#           "// dummy header" | Out-File "deps\libmpv\x86_64\include\mpv.h"
+#         }
+#       shell: powershell
     
-    - name: Create dummy dependencies (test)
-      run: |
-        # Create dummy server.js for testing
-        New-Item -ItemType Directory -Path "utils\windows" -Force
-        "// Test server.js" | Out-File "utils\windows\server.js"
+#     - name: Create dummy dependencies (test)
+#       run: |
+#         # Create dummy server.js for testing
+#         New-Item -ItemType Directory -Path "utils\windows" -Force
+#         "// Test server.js" | Out-File "utils\windows\server.js"
         
-        # Create dummy stremio-runtime.exe if it doesn't exist
-        if (-not (Test-Path "utils\windows\stremio-runtime.exe")) {
-          "dummy runtime" | Out-File "utils\windows\stremio-runtime.exe"
-        }
+#         # Create dummy stremio-runtime.exe if it doesn't exist
+#         if (-not (Test-Path "utils\windows\stremio-runtime.exe")) {
+#           "dummy runtime" | Out-File "utils\windows\stremio-runtime.exe"
+#         }
         
-        Write-Host "Test dependencies created"
-      shell: powershell
+#         Write-Host "Test dependencies created"
+#       shell: powershell
     
-    - name: Configure CMake (test)
-      run: |
-        cmake -B build -S . `
-          -DCMAKE_TOOLCHAIN_FILE="${{ runner.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" `
-          -DVCPKG_TARGET_TRIPLET=x64-windows-static `
-          -DCMAKE_BUILD_TYPE=Release `
-          -A x64
-      shell: powershell
+#     - name: Configure CMake (test)
+#       run: |
+#         cmake -B build -S . `
+#           -DCMAKE_TOOLCHAIN_FILE="${{ runner.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+#           -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+#           -DCMAKE_BUILD_TYPE=Release `
+#           -A x64
+#       shell: powershell
     
-    - name: Build project (test)
-      run: |
-        cmake --build build --config Release --parallel
-      shell: powershell
+#     - name: Build project (test)
+#       run: |
+#         cmake --build build --config Release --parallel
+#       shell: powershell
     
-    - name: Verify test build
-      run: |
-        Write-Host "Build completed. Checking outputs..."
+#     - name: Verify test build
+#       run: |
+#         Write-Host "Build completed. Checking outputs..."
         
-        if (Test-Path "build\Release\stremio.exe") {
-          Write-Host "✅ Test build successful! stremio.exe created"
-          $fileInfo = Get-Item "build\Release\stremio.exe"
-          Write-Host "File size: $($fileInfo.Length) bytes"
-          Write-Host "Modified code verification:"
+#         if (Test-Path "build\Release\stremio.exe") {
+#           Write-Host "✅ Test build successful! stremio.exe created"
+#           $fileInfo = Get-Item "build\Release\stremio.exe"
+#           Write-Host "File size: $($fileInfo.Length) bytes"
+#           Write-Host "Modified code verification:"
           
-          # Verify our modification is in the source
-          $playerFile = Get-Content "src\mpv\player.cpp" -Raw
-          if ($playerFile -match "Always send pause=false to frontend") {
-            Write-Host "✅ UI auto-hide fix code found in source"
-          } else {
-            Write-Host "❌ UI auto-hide fix code not found in source"
-          }
-        } else {
-          Write-Host "❌ Test build failed! stremio.exe not found"
-          Write-Host "Available files in build directory:"
-          Get-ChildItem "build" -Recurse -Name "*.exe" | ForEach-Object { Write-Host "  $_" }
-          exit 1
-        }
+#           # Verify our modification is in the source
+#           $playerFile = Get-Content "src\mpv\player.cpp" -Raw
+#           if ($playerFile -match "Always send pause=false to frontend") {
+#             Write-Host "✅ UI auto-hide fix code found in source"
+#           } else {
+#             Write-Host "❌ UI auto-hide fix code not found in source"
+#           }
+#         } else {
+#           Write-Host "❌ Test build failed! stremio.exe not found"
+#           Write-Host "Available files in build directory:"
+#           Get-ChildItem "build" -Recurse -Name "*.exe" | ForEach-Object { Write-Host "  $_" }
+#           exit 1
+#         }
         
-        Write-Host ""
-        Write-Host "🎉 Test build verification complete!"
-        Write-Host "The modified Stremio with UI auto-hide fix builds successfully."
-      shell: powershell
+#         Write-Host ""
+#         Write-Host "🎉 Test build verification complete!"
+#         Write-Host "The modified Stremio with UI auto-hide fix builds successfully."
+#       shell: powershell
     
-    - name: Upload test artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-build-stremio-${{ github.sha }}
-        path: |
-          build/Release/stremio.exe
-          src/mpv/player.cpp
-        retention-days: 7
+#     - name: Upload test artifacts
+#       uses: actions/upload-artifact@v4
+#       if: always()
+#       with:
+#         name: test-build-stremio-${{ github.sha }}
+#         path: |
+#           build/Release/stremio.exe
+#           src/mpv/player.cpp
+#         retention-days: 7

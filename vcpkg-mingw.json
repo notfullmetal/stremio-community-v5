@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "stremio-desktop-v5-mingw",
+  "version": "5.0.19",
+  "description": "Stremio Desktop Community Edition v5 - MinGW-w64 Cross-compilation",
+  "homepage": "https://github.com/Zaarrg/stremio-desktop-v5",
+  "supports": "windows",
+  "dependencies": [
+    {
+      "name": "openssl",
+      "default-features": false,
+      "features": ["no-asm"]
+    },
+    "nlohmann-json",
+    {
+      "name": "webview2",
+      "default-features": false
+    },
+    {
+      "name": "curl",
+      "default-features": false,
+      "features": ["ssl"]
+    }
+  ],
+  "builtin-baseline": "a42af01b72c28a8e1d7b48107b33e4f286a55ef6"
+}

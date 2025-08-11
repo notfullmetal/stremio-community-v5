@@ -1,0 +1,66 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 16,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "mingw-w64-cross-compile",
+            "displayName": "MinGW-w64 Cross-Compile for Windows",
+            "description": "Cross-compile Windows executable on Linux using mingw-w64",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build-mingw",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/mingw-w64-x86_64.cmake",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_SYSTEM_NAME": "Windows",
+                "CMAKE_C_COMPILER": "x86_64-w64-mingw32-gcc",
+                "CMAKE_CXX_COMPILER": "x86_64-w64-mingw32-g++",
+                "CMAKE_RC_COMPILER": "x86_64-w64-mingw32-windres",
+                "VCPKG_TARGET_TRIPLET": "x64-mingw-static",
+                "VCPKG_MANIFEST_FILE": "${sourceDir}/vcpkg-mingw.json"
+            },
+            "environment": {
+                "VCPKG_DEFAULT_TRIPLET": "x64-mingw-static"
+            },
+            "condition": {
+                "type": "notEquals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "windows-msvc",
+            "displayName": "Windows MSVC Native Build",
+            "description": "Native Windows build using MSVC",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "${sourceDir}/build-msvc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "mingw-w64-cross-compile",
+            "configurePreset": "mingw-w64-cross-compile",
+            "displayName": "Build with MinGW-w64 Cross-Compile",
+            "description": "Build Windows executable using cross-compilation"
+        },
+        {
+            "name": "windows-msvc",
+            "configurePreset": "windows-msvc",
+            "displayName": "Build with MSVC",
+            "description": "Build Windows executable natively on Windows"
+        }
+    ]
+}
