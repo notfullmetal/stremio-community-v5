@@ -18,7 +18,6 @@ on:
         type: boolean
 
 env:
-  VCPKG_FEATURE_FLAGS: manifests
   VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
 
 jobs:
@@ -39,72 +38,11 @@ jobs:
     - name: Setup CMake
       uses: lukka/get-cmake@latest
     
-    - name: Setup vcpkg
-      run: |
-        Write-Host "Setting up vcpkg with updated baseline..."
-        
-        # Use workspace-relative path to avoid conflicts
-        $vcpkgPath = "${{ github.workspace }}\vcpkg"
-        Write-Host "vcpkg path: $vcpkgPath"
-        
-        # Remove if exists (from previous runs)
-        if (Test-Path $vcpkgPath) {
-          Write-Host "Removing existing vcpkg directory..."
-          Remove-Item -Path $vcpkgPath -Recurse -Force
-        }
-        
-        # Clone vcpkg with updated baseline
-        Write-Host "Cloning vcpkg..."
-        git clone https://github.com/Microsoft/vcpkg.git $vcpkgPath
-        cd $vcpkgPath
-        git checkout 01f602195983560bc1c9a2b9fdd3fef76b8e54fe
-        
-        # Bootstrap vcpkg
-        Write-Host "Bootstrapping vcpkg..."
-        .\bootstrap-vcpkg.bat
-        if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed" }
-        
-        # Set environment variables for manifest mode
-        echo "VCPKG_ROOT=$vcpkgPath" >> $env:GITHUB_ENV
-        echo "VCPKG_DEFAULT_TRIPLET=x64-windows-static" >> $env:GITHUB_ENV
-        
-        Write-Host "vcpkg setup complete"
-        & "$vcpkgPath\vcpkg.exe" version
-      shell: powershell
-    
-    - name: Install vcpkg dependencies (manifest mode)
-      run: |
-        Write-Host "Installing dependencies using vcpkg manifest mode..."
-        Write-Host "vcpkg root: $env:VCPKG_ROOT"
-        Write-Host "Working directory: $(Get-Location)"
-        Write-Host "vcpkg.json content:"
-        Get-Content "vcpkg.json"
-        
-        # Set binary caching for faster builds
-        $env:VCPKG_BINARY_SOURCES = "clear;x-gha,readwrite"
-        
-        # Try installing with manifest mode
-        Write-Host "Attempting vcpkg install..."
-        & "$env:VCPKG_ROOT\vcpkg.exe" install --triplet x64-windows-static --debug
-        
-        if ($LASTEXITCODE -ne 0) { 
-          Write-Host "First vcpkg install attempt failed. Trying with --clean-after-build..."
-          & "$env:VCPKG_ROOT\vcpkg.exe" install --triplet x64-windows-static --clean-after-build
-          
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "Second attempt failed. Checking vcpkg configuration..."
-            Write-Host "Available packages:"
-            & "$env:VCPKG_ROOT\vcpkg.exe" search openssl
-            & "$env:VCPKG_ROOT\vcpkg.exe" search nlohmann-json
-            & "$env:VCPKG_ROOT\vcpkg.exe" search webview2
-            & "$env:VCPKG_ROOT\vcpkg.exe" search curl
-            throw "vcpkg dependency installation failed after multiple attempts" 
-          }
-        }
-        
-        Write-Host "Dependencies installed successfully"
-        & "$env:VCPKG_ROOT\vcpkg.exe" list
-      shell: powershell
+    - name: Setup vcpkg (Official Action)
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: '01f602195983560bc1c9a2b9fdd3fef76b8e54fe'
+        vcpkgJsonGlob: '**/vcpkg.json'
     
     - name: Download MPV library
       run: |
@@ -179,14 +117,19 @@ jobs:
     
     - name: Configure CMake
       run: |
-        Write-Host "Configuring CMake with vcpkg integration..."
-        Write-Host "vcpkg root: $env:VCPKG_ROOT"
+        Write-Host "Configuring CMake with official vcpkg integration..."
+        Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
+        Write-Host "RUNVCPKG_VCPKG_ROOT: $env:RUNVCPKG_VCPKG_ROOT"
+        
+        # Use the vcpkg root set by lukka action
+        $vcpkgRoot = if ($env:RUNVCPKG_VCPKG_ROOT) { $env:RUNVCPKG_VCPKG_ROOT } else { $env:VCPKG_ROOT }
+        Write-Host "Using vcpkg root: $vcpkgRoot"
         
         # Create build directory
         New-Item -ItemType Directory -Path "build" -Force
         
         # Configure CMake with vcpkg toolchain
-        $toolchainFile = "$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+        $toolchainFile = "$vcpkgRoot\scripts\buildsystems\vcpkg.cmake"
         Write-Host "Toolchain file: $toolchainFile"
         Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
         
@@ -197,13 +140,12 @@ jobs:
           -A x64
         
         if ($LASTEXITCODE -ne 0) { 
-          Write-Host "CMake configuration failed. Checking vcpkg integration..."
-          Write-Host "vcpkg root: $env:VCPKG_ROOT"
+          Write-Host "CMake configuration failed. Environment details:"
+          Write-Host "VCPKG_ROOT: $env:VCPKG_ROOT"
+          Write-Host "RUNVCPKG_VCPKG_ROOT: $env:RUNVCPKG_VCPKG_ROOT"
+          Write-Host "Calculated vcpkg root: $vcpkgRoot"
           Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
-          if (Test-Path $toolchainFile) {
-            Write-Host "Toolchain file content preview:"
-            Get-Content $toolchainFile | Select-Object -First 10
-          }
+          ls $vcpkgRoot
           throw "CMake configuration failed" 
         }
         
