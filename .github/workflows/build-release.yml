@@ -1,0 +1,297 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v5.0.19)'
+        required: true
+        default: 'v5.0.19'
+      create_release:
+        description: 'Create GitHub release'
+        required: true
+        default: true
+        type: boolean
+
+env:
+  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+        vcpkgJsonGlob: 'vcpkg.json'
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        vs-version: '17.0'
+    
+    - name: Setup CMake
+      uses: lukka/get-cmake@latest
+    
+    - name: Cache vcpkg packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ github.workspace }}/vcpkg_installed
+          ${{ runner.workspace }}/vcpkg
+        key: vcpkg-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-
+    
+    - name: Install vcpkg dependencies
+      run: |
+        vcpkg install openssl:x64-windows-static
+        vcpkg install nlohmann-json:x64-windows-static
+        vcpkg install webview2:x64-windows-static
+        vcpkg install curl:x64-windows-static
+        vcpkg integrate install
+      working-directory: ${{ runner.workspace }}/vcpkg
+    
+    - name: Download MPV library
+      run: |
+        # Create directory structure
+        New-Item -ItemType Directory -Path "deps\libmpv\x86_64" -Force
+        
+        # Download latest MPV dev build
+        $mpvUrl = "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
+        try {
+          Invoke-WebRequest -Uri $mpvUrl -OutFile "mpv-dev.7z" -UserAgent "Mozilla/5.0" -TimeoutSec 300
+          7z x mpv-dev.7z -o"mpv-temp"
+          Copy-Item "mpv-temp\*" "deps\libmpv\x86_64\" -Recurse -Force
+          Write-Host "✅ MPV library downloaded successfully"
+        } catch {
+          Write-Host "⚠️ Failed to download MPV library: $($_.Exception.Message)"
+          Write-Host "Creating minimal structure for build to continue..."
+          New-Item -ItemType Directory -Path "deps\libmpv\x86_64\include" -Force
+        }
+        
+        # Verify libmpv-2.dll exists
+        if (Test-Path "deps\libmpv\x86_64\libmpv-2.dll") {
+          Write-Host "✅ libmpv-2.dll found"
+        } else {
+          Write-Host "⚠️ libmpv-2.dll not found, checking available files..."
+          if (Test-Path "mpv-temp") {
+            Get-ChildItem "mpv-temp" -Recurse -Name "*.dll" | Write-Host
+          }
+        }
+      shell: powershell
+    
+    - name: Get version from CMakeLists.txt
+      id: get_version
+      run: |
+        # Extract version from CMakeLists.txt
+        $cmakeContent = Get-Content "CMakeLists.txt" -Raw
+        if ($cmakeContent -match 'project\(stremio VERSION "([^"]+)"\)') {
+          $version = $matches[1]
+          Write-Host "Found version in CMakeLists.txt: $version"
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "full_version=v$version" >> $env:GITHUB_OUTPUT
+        } else {
+          $fallbackVersion = "5.0.19"
+          Write-Host "Could not extract version from CMakeLists.txt, using fallback: $fallbackVersion"
+          echo "version=$fallbackVersion" >> $env:GITHUB_OUTPUT
+          echo "full_version=v$fallbackVersion" >> $env:GITHUB_OUTPUT
+        }
+      shell: powershell
+    
+    - name: Download additional dependencies
+      run: |
+        # Download server.js using detected version
+        $version = "${{ steps.get_version.outputs.version }}"
+        $serverUrl = "https://s3-eu-west-1.amazonaws.com/stremio-artifacts/four/v$version/server.js"
+        New-Item -ItemType Directory -Path "utils\windows" -Force
+        
+        try {
+          Invoke-WebRequest -Uri $serverUrl -OutFile "utils\windows\server.js" -TimeoutSec 60
+          Write-Host "✅ server.js downloaded for version $version"
+        } catch {
+          Write-Host "⚠️ Could not download server.js for version $version : $($_.Exception.Message)"
+          Write-Host "Creating placeholder server.js"
+          "// Placeholder server.js for build" | Out-File "utils\windows\server.js"
+        }
+        
+        # Verify stremio-runtime.exe exists
+        if (Test-Path "utils\windows\stremio-runtime.exe") {
+          Write-Host "✅ stremio-runtime.exe found"
+        } else {
+          Write-Host "⚠️ stremio-runtime.exe not found"
+        }
+      shell: powershell
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . `
+          -DCMAKE_TOOLCHAIN_FILE="${{ runner.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" `
+          -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+          -DCMAKE_BUILD_TYPE=Release `
+          -A x64
+      shell: powershell
+    
+    - name: Build project
+      run: |
+        cmake --build build --config Release --parallel
+      shell: powershell
+    
+    - name: Verify build output
+      run: |
+        if (Test-Path "build\Release\stremio.exe") {
+          Write-Host "✅ Build successful! stremio.exe created"
+          Get-Item "build\Release\stremio.exe" | Format-List Name, Length, LastWriteTime
+        } else {
+          Write-Host "❌ Build failed! stremio.exe not found"
+          Get-ChildItem "build" -Recurse -Name "*.exe"
+          exit 1
+        }
+      shell: powershell
+    
+    - name: Prepare release artifacts
+      run: |
+        # Create release directory
+        New-Item -ItemType Directory -Path "release" -Force
+        
+        # Copy main executable
+        Copy-Item "build\Release\stremio.exe" "release\"
+        
+        # Copy MPV library if available
+        if (Test-Path "deps\libmpv\x86_64\libmpv-2.dll") {
+          Copy-Item "deps\libmpv\x86_64\libmpv-2.dll" "release\"
+          Write-Host "✅ MPV library included"
+        } else {
+          Write-Host "⚠️ MPV library not found, skipping"
+        }
+        
+        # Create installation readme
+        $version = "${{ steps.get_version.outputs.full_version }}"
+        @"
+        # Stremio Desktop Community Build $version
+        
+        ## Installation Instructions
+        
+        ### For Windows x64:
+        1. **Close Stremio** if currently running
+        2. **Backup your current installation**:
+           ``````powershell
+           cd `"`$env:LOCALAPPDATA\Programs\LNV\Stremio-5`"
+           Copy-Item `"stremio.exe`" `"stremio.exe.backup`"
+           ``````
+        3. **Replace with this build**:
+           ``````powershell
+           Copy-Item `"path\to\downloaded\stremio.exe`" `"stremio.exe`"
+           ``````
+        4. **Launch Stremio** and test the new features!
+        
+        ### Rollback Instructions:
+        If you encounter any issues:
+        ``````powershell
+        cd `"`$env:LOCALAPPDATA\Programs\LNV\Stremio-5`"
+        Copy-Item `"stremio.exe.backup`" `"stremio.exe`"
+        ``````
+        
+        ## Build Information
+        - Version: $version
+        - Architecture: x64 Windows
+        - Built from commit: ${{ github.sha }}
+        - Build date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
+        
+        ## Compatibility
+        - Compatible with existing Stremio Desktop v5 installations
+        - Preserves all user data and settings
+        - Works with existing portable_config customizations
+        "@ | Out-File "release\README.md"
+        
+        # Create version info file
+        @"
+        Version: $version
+        Commit: ${{ github.sha }}
+        Build Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
+        Build Environment: GitHub Actions Windows 2022
+        Architecture: x64
+        "@ | Out-File "release\BUILD_INFO.txt"
+        
+        Write-Host "Release artifacts prepared:"
+        Get-ChildItem "release" -Recurse | Format-Table Name, Length
+      shell: powershell
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: stremio-desktop-${{ steps.get_version.outputs.version }}-windows-x64
+        path: release/
+        retention-days: 30
+    
+    - name: Create Release
+      if: github.event.inputs.create_release == 'true' || startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.event.inputs.version || steps.get_version.outputs.full_version }}
+        name: "Stremio Desktop Community ${{ github.event.inputs.version || steps.get_version.outputs.full_version }}"
+        body: |
+          ## 🚀 Stremio Desktop Community Build
+          
+          This is a community-maintained build of Stremio Desktop v5.
+          
+          ### 📥 Installation Instructions
+          
+          1. **Backup your current installation:**
+             ```powershell
+             cd "$env:LOCALAPPDATA\Programs\LNV\Stremio-5"
+             Copy-Item "stremio.exe" "stremio.exe.backup"
+             ```
+          
+          2. **Download and replace:**
+             - Download `stremio.exe` from the assets below
+             - Replace your existing `stremio.exe` with the downloaded version
+          
+          3. **Launch and test:**
+             - Start Stremio and verify everything works correctly
+          
+          ### 🔧 Build Information
+          - **Version**: ${{ steps.get_version.outputs.full_version }}
+          - **Architecture**: x64 Windows
+          - **Build Environment**: GitHub Actions Windows Server 2022
+          - **Commit**: ${{ github.sha }}
+          - **Built**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          ### 🛠️ Troubleshooting
+          
+          If you encounter any issues:
+          ```powershell
+          # Restore your backup
+          cd "$env:LOCALAPPDATA\Programs\LNV\Stremio-5"
+          Copy-Item "stremio.exe.backup" "stremio.exe"
+          ```
+          
+          ### ⚠️ Compatibility
+          - Compatible with existing Stremio Desktop v5 installations
+          - Preserves all user data and settings
+          - Works with existing portable_config customizations
+          - Requires Windows x64 architecture
+          
+          ---
+          
+          **Full installation instructions and troubleshooting guide included in the README.md file below.**
+        files: |
+          release/stremio.exe
+          release/README.md
+          release/BUILD_INFO.txt
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

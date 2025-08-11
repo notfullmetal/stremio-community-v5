@@ -1,0 +1,78 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+dist/
+release/
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeSettings.json
+*.cmake
+
+# vcpkg
+vcpkg_installed/
+.vcpkg-root
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.7z
+mpv-temp/
+mpv-dev*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Dependencies (these get downloaded automatically)
+deps/libmpv/x86_64/
+deps/libmpv/i686/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build artifacts
+*.exe
+*.dll
+*.pdb
+*.lib
+*.obj
+*.exp
+*.ilk
+
+# Exception: Keep the original stremio-runtime.exe if it exists
+!utils/windows/stremio-runtime.exe
+
+# IDE files
+.vscode/
+*.swp
+*.swo
+*~
+
+# Package manager files
+packages/
+node_modules/
+
+# Testing
+test-results/
+TestResults/
+
+# Logs
+*.log
+logs/

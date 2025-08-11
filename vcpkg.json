@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "stremio-desktop-v5",
+  "version": "5.0.19",
+  "description": "Stremio Desktop Community Edition v5",
+  "homepage": "https://github.com/Zaarrg/stremio-desktop-v5",
+  "supports": "windows",
+  "dependencies": [
+    {
+      "name": "openssl",
+      "features": ["tools"]
+    },
+    "nlohmann-json",
+    "webview2",
+    "curl"
+  ],
+  "features": {
+    "static": {
+      "description": "Build with static libraries",
+      "dependencies": [
+        {
+          "name": "openssl",
+          "features": ["tools"],
+          "platform": "windows"
+        }
+      ]
+    }
+  },
+  "vcpkg-configuration": {
+    "default-registry": {
+      "kind": "git",
+      "repository": "https://github.com/Microsoft/vcpkg",
+      "baseline": "a42af01b72c28a8e1d7b48107b33e4f286a55ef6"
+    }
+  }
+}

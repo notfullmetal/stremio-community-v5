@@ -134,6 +134,13 @@ void HandleMpvEvents()
             if (j["name"] == "volume" && g_initialSet) {
                 g_currentVolume = j["data"];
             }
+            
+            // Always send pause=false to frontend to enable UI auto-hide during pause
+            // while maintaining actual pause state for internal functionality
+            if (j["name"] == "pause") {
+                j["data"] = false;  // Always send false to make UI auto-hide work during pause
+            }
+            
             SendToJS("mpv-prop-change", j);
             break;
         }
