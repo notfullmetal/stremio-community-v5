@@ -180,43 +180,100 @@ jobs:
         # Create directory structure
         mkdir -p deps/libmpv/x86_64
         
-        # Download latest MPV dev build for Windows
-        MPV_URL="https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
+        # Function to try different MPV download sources
+        download_mpv() {
+          # Try multiple MPV sources in order of preference
+          local urls=(
+            "https://github.com/zhongfly/mpv-winbuild/releases/latest/download/mpv-dev-x86_64.7z"
+            "https://github.com/shinchiro/mpv-winbuild-cmake/releases/latest/download/mpv-dev-x86_64.7z"
+            "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241201-git-6954c45.7z/download"
+            "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
+          )
+          
+          for url in "${urls[@]}"; do
+            echo "Trying: $url"
+            
+            # Download with proper headers and follow redirects
+            if curl -L -f --retry 3 --retry-delay 5 \
+              -H "Accept: application/octet-stream" \
+              -H "User-Agent: GitHub-Actions-Bot/1.0" \
+              -o mpv-dev.7z "$url"; then
+              
+              # Check if file is actually a 7z archive
+              if file mpv-dev.7z | grep -q "7-zip\|7z archive"; then
+                echo "✅ Successfully downloaded valid 7z archive from: $url"
+                return 0
+              else
+                echo "⚠️ Downloaded file is not a valid 7z archive"
+                file mpv-dev.7z
+                rm -f mpv-dev.7z
+              fi
+            else
+              echo "❌ Failed to download from: $url"
+            fi
+          done
+          
+          return 1
+        }
         
-        echo "Downloading from: $MPV_URL"
-        curl -L -o mpv-dev.7z "$MPV_URL" --user-agent "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
-        
-        if [ -f mpv-dev.7z ]; then
+        # Try to download MPV library
+        if download_mpv; then
           # Extract MPV library
+          echo "Extracting MPV library..."
           7z x mpv-dev.7z -ompv-temp
           
-          # Copy files to expected location
-          cp -r mpv-temp/* deps/libmpv/x86_64/
-          
-          # Verify critical files exist
-          if [ -f "deps/libmpv/x86_64/libmpv-2.dll" ]; then
-            echo "✅ libmpv-2.dll found"
-            ls -la deps/libmpv/x86_64/*.dll
-          else
-            echo "⚠️ libmpv-2.dll not found, checking available files..."
-            find mpv-temp -name "*.dll" -o -name "*.lib" | head -20
+          if [ $? -eq 0 ] && [ -d mpv-temp ]; then
+            # Copy files to expected location
+            cp -r mpv-temp/* deps/libmpv/x86_64/
             
-            # Try to find and copy the correct files
-            find mpv-temp -name "libmpv*.dll" -exec cp {} deps/libmpv/x86_64/ \;
-            find mpv-temp -name "mpv.lib" -exec cp {} deps/libmpv/x86_64/ \;
-            find mpv-temp -type d -name "include" -exec cp -r {} deps/libmpv/x86_64/ \;
+            # Verify critical files exist
+            if [ -f "deps/libmpv/x86_64/libmpv-2.dll" ]; then
+              echo "✅ libmpv-2.dll found"
+              ls -la deps/libmpv/x86_64/*.dll 2>/dev/null || echo "No .dll files to list"
+            else
+              echo "⚠️ libmpv-2.dll not found, searching for alternatives..."
+              
+              # Search for MPV files with different patterns
+              find mpv-temp -name "*.dll" | grep -i mpv | head -10
+              find mpv-temp -name "*.lib" | grep -i mpv | head -10
+              
+              # Try to find and copy the correct files with flexible naming
+              find mpv-temp -name "*mpv*.dll" -exec cp {} deps/libmpv/x86_64/ \; 2>/dev/null || true
+              find mpv-temp -name "mpv*.lib" -exec cp {} deps/libmpv/x86_64/ \; 2>/dev/null || true
+              find mpv-temp -name "libmpv*.lib" -exec cp {} deps/libmpv/x86_64/ \; 2>/dev/null || true
+              find mpv-temp -type d -name "include" -exec cp -r {} deps/libmpv/x86_64/ \; 2>/dev/null || true
+              
+              # Check what we actually got
+              echo "Files copied to deps/libmpv/x86_64/:"
+              ls -la deps/libmpv/x86_64/ || echo "Directory is empty"
+            fi
+            
+            # Clean up
+            rm -rf mpv-temp mpv-dev.7z
+            echo "✅ MPV library extraction completed"
+          else
+            echo "❌ Failed to extract MPV library"
+            rm -f mpv-dev.7z
           fi
-          
-          # Clean up
-          rm -rf mpv-temp mpv-dev.7z
         else
-          echo "❌ Failed to download MPV library"
-          echo "Creating minimal structure for build to continue..."
-          mkdir -p deps/libmpv/x86_64/include
-          # Note: This will likely cause build failures, but keeps the workflow going
+          echo "❌ Failed to download MPV library from all sources"
         fi
         
-        echo "✅ MPV library setup complete"
+        # Final verification and fallback
+        if [ ! -f "deps/libmpv/x86_64/libmpv-2.dll" ] && [ ! -f "deps/libmpv/x86_64/mpv-2.dll" ]; then
+          echo "⚠️ No MPV DLL found, creating minimal structure for build..."
+          mkdir -p deps/libmpv/x86_64/include
+          
+          # Create dummy files to prevent immediate build failure
+          # These will need to be replaced with actual MPV files for a working build
+          echo "Dummy MPV DLL - replace with actual libmpv-2.dll" > deps/libmpv/x86_64/libmpv-2.dll
+          echo "Dummy MPV lib - replace with actual mpv.lib" > deps/libmpv/x86_64/mpv.lib
+          echo "// Dummy MPV header - replace with actual headers" > deps/libmpv/x86_64/include/mpv.h
+          
+          echo "⚠️ WARNING: Using dummy MPV files - build may fail at linking stage"
+        else
+          echo "✅ MPV library setup complete"
+        fi
 
     - name: Download additional Windows dependencies
       id: get_version

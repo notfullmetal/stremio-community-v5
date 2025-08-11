@@ -95,12 +95,32 @@ mkdir -p cmake/toolchains
 
 ### 4️⃣ **Download MPV Library**
 
+The setup script automatically tries multiple MPV sources for reliability:
+
 ```bash
+# The setup script handles this automatically, but for manual setup:
+
 # Create MPV directory
 mkdir -p deps/libmpv/x86_64
 
-# Download MPV library for Windows
-curl -L -o mpv-dev.7z "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
+# Try multiple MPV sources (in order of preference):
+# 1. GitHub releases (most reliable)
+# 2. SourceForge (backup)
+
+urls=(
+  "https://github.com/zhongfly/mpv-winbuild/releases/latest/download/mpv-dev-x86_64.7z"
+  "https://github.com/shinchiro/mpv-winbuild-cmake/releases/latest/download/mpv-dev-x86_64.7z"
+  "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241201-git-6954c45.7z/download"
+)
+
+for url in "${urls[@]}"; do
+  if curl -L -f --retry 3 -o mpv-dev.7z "$url"; then
+    if file mpv-dev.7z | grep -q "7-zip\|7z archive"; then
+      echo "Downloaded valid 7z archive from: $url"
+      break
+    fi
+  fi
+done
 
 # Extract MPV library
 7z x mpv-dev.7z -ompv-temp
@@ -243,15 +263,52 @@ x86_64-w64-mingw32-ld --verbose | grep SEARCH_DIR
 ```
 
 #### **5. MPV Library Issues**
+
+MPV download failures are common due to SourceForge reliability issues. The improved setup handles this automatically:
+
 ```bash
-# Verify MPV files exist
+# Check what was downloaded
 ls -la deps/libmpv/x86_64/
 # Should contain: libmpv-2.dll, mpv.lib, include/
 
-# Re-download if necessary
-rm -rf deps/libmpv/x86_64/*
-# (repeat download steps from setup)
+# If MPV download failed, check the file type
+file mpv-dev.7z
+# Should show: "7-zip archive data" not "HTML document"
+
+# Manual MPV download with multiple sources
+urls=(
+  "https://github.com/zhongfly/mpv-winbuild/releases/latest/download/mpv-dev-x86_64.7z"
+  "https://github.com/shinchiro/mpv-winbuild-cmake/releases/latest/download/mpv-dev-x86_64.7z"
+)
+
+for url in "${urls[@]}"; do
+  echo "Trying: $url"
+  if curl -L -f -o mpv-dev.7z "$url"; then
+    if file mpv-dev.7z | grep -q "7-zip"; then
+      echo "Success! Valid 7z archive downloaded"
+      7z x mpv-dev.7z -ompv-temp
+      cp -r mpv-temp/* deps/libmpv/x86_64/
+      rm -rf mpv-temp mpv-dev.7z
+      break
+    fi
+  fi
+done
+
+# Verify extraction
+if [ -f "deps/libmpv/x86_64/libmpv-2.dll" ]; then
+  echo "✅ MPV library ready"
+else
+  echo "❌ MPV library extraction failed"
+  # Check for alternative file names
+  find deps/libmpv/x86_64/ -name "*mpv*.dll"
+fi
 ```
+
+**Common MPV Issues:**
+- **SourceForge redirects**: Returns HTML instead of 7z file
+- **GitHub rate limiting**: Use different repos as fallbacks  
+- **File corruption**: Always verify with `file` command
+- **Missing files**: Some builds have different file structures
 
 ### Debug Build Information
 

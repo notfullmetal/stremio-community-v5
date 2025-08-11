@@ -128,32 +128,95 @@ download_mpv_library() {
     
     mkdir -p "$mpv_dir"
     
-    # Download MPV library
-    local mpv_url="https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
-    local mpv_archive="mpv-dev.7z"
+    # Function to try different MPV download sources
+    try_download_mpv() {
+        local urls=(
+            "https://github.com/zhongfly/mpv-winbuild/releases/latest/download/mpv-dev-x86_64.7z"
+            "https://github.com/shinchiro/mpv-winbuild-cmake/releases/latest/download/mpv-dev-x86_64.7z"
+            "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241201-git-6954c45.7z/download"
+            "https://sourceforge.net/projects/mpv-player-windows/files/libmpv/mpv-dev-x86_64-20241229-git-d1e4dce.7z/download"
+        )
+        
+        for url in "${urls[@]}"; do
+            print_status "Trying MPV download from: $url"
+            
+            # Download with proper headers and follow redirects
+            if curl -L -f --retry 3 --retry-delay 5 \
+              -H "Accept: application/octet-stream" \
+              -H "User-Agent: CrossCompile-Script/1.0" \
+              -o mpv-dev.7z "$url"; then
+              
+              # Check if file is actually a 7z archive
+              if file mpv-dev.7z | grep -q "7-zip\|7z archive"; then
+                print_success "Successfully downloaded valid 7z archive from: $url"
+                return 0
+              else
+                print_warning "Downloaded file is not a valid 7z archive"
+                file mpv-dev.7z
+                rm -f mpv-dev.7z
+              fi
+            else
+              print_warning "Failed to download from: $url"
+            fi
+        done
+        
+        return 1
+    }
     
-    print_status "Downloading MPV library..."
-    if ! curl -L -o "$mpv_archive" "$mpv_url" --user-agent "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"; then
-        print_error "Failed to download MPV library"
-        exit 1
-    fi
-    
-    # Extract MPV library
-    print_status "Extracting MPV library..."
-    7z x "$mpv_archive" -ompv-temp >/dev/null
-    cp -r mpv-temp/* "$mpv_dir/"
-    
-    # Verify extraction
-    if [ -f "$mpv_dir/libmpv-2.dll" ]; then
-        print_success "MPV library setup complete"
+    # Try to download MPV library
+    if try_download_mpv; then
+        # Extract MPV library
+        print_status "Extracting MPV library..."
+        if 7z x mpv-dev.7z -ompv-temp >/dev/null && [ -d mpv-temp ]; then
+            # Copy files to expected location
+            cp -r mpv-temp/* "$mpv_dir/"
+            
+            # Verify critical files exist
+            if [ -f "$mpv_dir/libmpv-2.dll" ]; then
+                print_success "MPV library setup complete"
+                ls -la "$mpv_dir"/*.dll 2>/dev/null || echo "No .dll files to list"
+            else
+                print_warning "libmpv-2.dll not found, searching for alternatives..."
+                
+                # Search for MPV files with different patterns
+                find mpv-temp -name "*.dll" | grep -i mpv | head -10
+                find mpv-temp -name "*.lib" | grep -i mpv | head -10
+                
+                # Try to find and copy the correct files with flexible naming
+                find mpv-temp -name "*mpv*.dll" -exec cp {} "$mpv_dir/" \; 2>/dev/null || true
+                find mpv-temp -name "mpv*.lib" -exec cp {} "$mpv_dir/" \; 2>/dev/null || true
+                find mpv-temp -name "libmpv*.lib" -exec cp {} "$mpv_dir/" \; 2>/dev/null || true
+                find mpv-temp -type d -name "include" -exec cp -r {} "$mpv_dir/" \; 2>/dev/null || true
+                
+                print_status "Files copied to $mpv_dir:"
+                ls -la "$mpv_dir/" || echo "Directory is empty"
+            fi
+            
+            # Clean up
+            rm -rf mpv-temp mpv-dev.7z
+        else
+            print_error "Failed to extract MPV library"
+            rm -f mpv-dev.7z
+            return 1
+        fi
     else
-        print_warning "MPV library extraction may have failed"
-        print_status "Available files in MPV directory:"
-        ls -la "$mpv_dir/"
+        print_error "Failed to download MPV library from all sources"
+        return 1
     fi
     
-    # Clean up
-    rm -rf mpv-temp "$mpv_archive"
+    # Final verification and fallback
+    if [ ! -f "$mpv_dir/libmpv-2.dll" ] && [ ! -f "$mpv_dir/mpv-2.dll" ]; then
+        print_warning "No MPV DLL found, creating minimal structure for build..."
+        mkdir -p "$mpv_dir/include"
+        
+        # Create dummy files to prevent immediate build failure
+        echo "Dummy MPV DLL - replace with actual libmpv-2.dll" > "$mpv_dir/libmpv-2.dll"
+        echo "Dummy MPV lib - replace with actual mpv.lib" > "$mpv_dir/mpv.lib"
+        echo "// Dummy MPV header - replace with actual headers" > "$mpv_dir/include/mpv.h"
+        
+        print_warning "WARNING: Using dummy MPV files - build may fail at linking stage"
+        print_status "Consider manually downloading MPV library to: $mpv_dir"
+    fi
 }
 
 # Function to download additional dependencies
