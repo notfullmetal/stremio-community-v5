@@ -19,6 +19,7 @@ on:
 
 env:
   VCPKG_FEATURE_FLAGS: manifests
+  VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
 
 jobs:
   build-windows:
@@ -40,7 +41,7 @@ jobs:
     
     - name: Setup vcpkg
       run: |
-        Write-Host "Setting up vcpkg for manifest mode..."
+        Write-Host "Setting up vcpkg with updated baseline..."
         
         # Use workspace-relative path to avoid conflicts
         $vcpkgPath = "${{ github.workspace }}\vcpkg"
@@ -52,11 +53,11 @@ jobs:
           Remove-Item -Path $vcpkgPath -Recurse -Force
         }
         
-        # Clone vcpkg to workspace
+        # Clone vcpkg with updated baseline
         Write-Host "Cloning vcpkg..."
         git clone https://github.com/Microsoft/vcpkg.git $vcpkgPath
         cd $vcpkgPath
-        git checkout a42af01b72c28a8e1d7b48107b33e4f286a55ef6
+        git checkout 01f602195983560bc1c9a2b9fdd3fef76b8e54fe
         
         # Bootstrap vcpkg
         Write-Host "Bootstrapping vcpkg..."
@@ -71,33 +72,34 @@ jobs:
         & "$vcpkgPath\vcpkg.exe" version
       shell: powershell
     
-    - name: Cache vcpkg packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ github.workspace }}/vcpkg/installed
-          ${{ github.workspace }}/vcpkg/buildtrees
-          ${{ github.workspace }}/vcpkg/packages
-          ${{ github.workspace }}/vcpkg_installed
-        key: vcpkg-manifest-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          vcpkg-manifest-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}-
-          vcpkg-manifest-${{ runner.os }}-
-    
     - name: Install vcpkg dependencies (manifest mode)
       run: |
         Write-Host "Installing dependencies using vcpkg manifest mode..."
         Write-Host "vcpkg root: $env:VCPKG_ROOT"
         Write-Host "Working directory: $(Get-Location)"
+        Write-Host "vcpkg.json content:"
+        Get-Content "vcpkg.json"
         
-        # In manifest mode, vcpkg reads vcpkg.json automatically
-        # We just need to run vcpkg install with the correct triplet
-        & "$env:VCPKG_ROOT\vcpkg.exe" install --triplet x64-windows-static
+        # Set binary caching for faster builds
+        $env:VCPKG_BINARY_SOURCES = "clear;x-gha,readwrite"
+        
+        # Try installing with manifest mode
+        Write-Host "Attempting vcpkg install..."
+        & "$env:VCPKG_ROOT\vcpkg.exe" install --triplet x64-windows-static --debug
         
         if ($LASTEXITCODE -ne 0) { 
-          Write-Host "vcpkg install failed. Checking available packages..."
-          & "$env:VCPKG_ROOT\vcpkg.exe" list
-          throw "vcpkg dependency installation failed" 
+          Write-Host "First vcpkg install attempt failed. Trying with --clean-after-build..."
+          & "$env:VCPKG_ROOT\vcpkg.exe" install --triplet x64-windows-static --clean-after-build
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Second attempt failed. Checking vcpkg configuration..."
+            Write-Host "Available packages:"
+            & "$env:VCPKG_ROOT\vcpkg.exe" search openssl
+            & "$env:VCPKG_ROOT\vcpkg.exe" search nlohmann-json
+            & "$env:VCPKG_ROOT\vcpkg.exe" search webview2
+            & "$env:VCPKG_ROOT\vcpkg.exe" search curl
+            throw "vcpkg dependency installation failed after multiple attempts" 
+          }
         }
         
         Write-Host "Dependencies installed successfully"
@@ -192,7 +194,6 @@ jobs:
           -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" `
           -DVCPKG_TARGET_TRIPLET=x64-windows-static `
           -DCMAKE_BUILD_TYPE=Release `
-          -DVCPKG_MANIFEST_MODE=ON `
           -A x64
         
         if ($LASTEXITCODE -ne 0) { 
