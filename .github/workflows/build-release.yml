@@ -42,29 +42,42 @@ jobs:
       run: |
         Write-Host "Setting up vcpkg for manifest mode..."
         
-        # Clone vcpkg to a predictable location
-        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
-        cd C:\vcpkg
+        # Use workspace-relative path to avoid conflicts
+        $vcpkgPath = "${{ github.workspace }}\vcpkg"
+        Write-Host "vcpkg path: $vcpkgPath"
+        
+        # Remove if exists (from previous runs)
+        if (Test-Path $vcpkgPath) {
+          Write-Host "Removing existing vcpkg directory..."
+          Remove-Item -Path $vcpkgPath -Recurse -Force
+        }
+        
+        # Clone vcpkg to workspace
+        Write-Host "Cloning vcpkg..."
+        git clone https://github.com/Microsoft/vcpkg.git $vcpkgPath
+        cd $vcpkgPath
         git checkout a42af01b72c28a8e1d7b48107b33e4f286a55ef6
         
         # Bootstrap vcpkg
+        Write-Host "Bootstrapping vcpkg..."
         .\bootstrap-vcpkg.bat
         if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed" }
         
         # Set environment variables for manifest mode
-        echo "VCPKG_ROOT=C:\vcpkg" >> $env:GITHUB_ENV
+        echo "VCPKG_ROOT=$vcpkgPath" >> $env:GITHUB_ENV
         echo "VCPKG_DEFAULT_TRIPLET=x64-windows-static" >> $env:GITHUB_ENV
         
         Write-Host "vcpkg setup complete"
+        & "$vcpkgPath\vcpkg.exe" version
       shell: powershell
     
     - name: Cache vcpkg packages
       uses: actions/cache@v4
       with:
         path: |
-          C:\vcpkg\installed
-          C:\vcpkg\buildtrees
-          C:\vcpkg\packages
+          ${{ github.workspace }}/vcpkg/installed
+          ${{ github.workspace }}/vcpkg/buildtrees
+          ${{ github.workspace }}/vcpkg/packages
           ${{ github.workspace }}/vcpkg_installed
         key: vcpkg-manifest-${{ runner.os }}-${{ hashFiles('**/vcpkg.json') }}-${{ hashFiles('**/CMakeLists.txt') }}
         restore-keys: |
@@ -74,19 +87,21 @@ jobs:
     - name: Install vcpkg dependencies (manifest mode)
       run: |
         Write-Host "Installing dependencies using vcpkg manifest mode..."
+        Write-Host "vcpkg root: $env:VCPKG_ROOT"
+        Write-Host "Working directory: $(Get-Location)"
         
         # In manifest mode, vcpkg reads vcpkg.json automatically
         # We just need to run vcpkg install with the correct triplet
-        C:\vcpkg\vcpkg.exe install --triplet x64-windows-static
+        & "$env:VCPKG_ROOT\vcpkg.exe" install --triplet x64-windows-static
         
         if ($LASTEXITCODE -ne 0) { 
           Write-Host "vcpkg install failed. Checking available packages..."
-          C:\vcpkg\vcpkg.exe list
+          & "$env:VCPKG_ROOT\vcpkg.exe" list
           throw "vcpkg dependency installation failed" 
         }
         
         Write-Host "Dependencies installed successfully"
-        C:\vcpkg\vcpkg.exe list
+        & "$env:VCPKG_ROOT\vcpkg.exe" list
       shell: powershell
     
     - name: Download MPV library
@@ -163,13 +178,18 @@ jobs:
     - name: Configure CMake
       run: |
         Write-Host "Configuring CMake with vcpkg integration..."
+        Write-Host "vcpkg root: $env:VCPKG_ROOT"
         
         # Create build directory
         New-Item -ItemType Directory -Path "build" -Force
         
         # Configure CMake with vcpkg toolchain
+        $toolchainFile = "$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+        Write-Host "Toolchain file: $toolchainFile"
+        Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
+        
         cmake -B build -S . `
-          -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+          -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" `
           -DVCPKG_TARGET_TRIPLET=x64-windows-static `
           -DCMAKE_BUILD_TYPE=Release `
           -DVCPKG_MANIFEST_MODE=ON `
@@ -178,7 +198,11 @@ jobs:
         if ($LASTEXITCODE -ne 0) { 
           Write-Host "CMake configuration failed. Checking vcpkg integration..."
           Write-Host "vcpkg root: $env:VCPKG_ROOT"
-          Write-Host "Toolchain file exists: $(Test-Path 'C:\vcpkg\scripts\buildsystems\vcpkg.cmake')"
+          Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
+          if (Test-Path $toolchainFile) {
+            Write-Host "Toolchain file content preview:"
+            Get-Content $toolchainFile | Select-Object -First 10
+          }
           throw "CMake configuration failed" 
         }
         
